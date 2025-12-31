@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Китайско-русский словарь с glass design">
+    <meta name="theme-color" content="#00CCFF">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <title>汉俄词典 - Chinese-Russian Dictionary</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading screen -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loader"></div>
+            <p>Загрузка словаря...</p>
+        </div>
+
+        <!-- Main app -->
+        <div id="main-app" class="hidden">
+            <!-- Tab content -->
+            <div id="tab-content" class="tab-content">
+                <!-- Search tab -->
+                <div id="search-tab" class="tab-pane active">
+                    <div class="page-header">
+                        <h1>Поиск</h1>
+                    </div>
+                    <div class="search-container">
+                        <div class="glass-input">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="汉字, pinyin, русский..." autocomplete="off">
+                        </div>
+                    </div>
+                    <div id="search-results" class="results-container"></div>
+                </div>
+
+                <!-- Dictionaries tab -->
+                <div id="dictionaries-tab" class="tab-pane">
+                    <div class="page-header">
+                        <h1>Словари</h1>
+                        <button class="icon-button" onclick="app.showAddDictionary()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dictionaries-list" class="list-container"></div>
+                </div>
+
+                <!-- Favorites tab -->
+                <div id="favorites-tab" class="tab-pane">
+                    <div class="page-header">
+                        <h1>Избранное</h1>
+                    </div>
+                    <div id="favorites-list" class="list-container"></div>
+                </div>
+            </div>
+
+            <!-- Bottom navigation -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-tab="search" onclick="app.switchTab('search')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>Поиск</span>
+                </button>
+                <button class="nav-item" data-tab="dictionaries" onclick="app.switchTab('dictionaries')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>Словари</span>
+                </button>
+                <button class="nav-item" data-tab="favorites" onclick="app.switchTab('favorites')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Избранное</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Modal container -->
+    <div id="modal-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/pinyin.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize app
+        window.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+    </script>
+</body>
+</html>
