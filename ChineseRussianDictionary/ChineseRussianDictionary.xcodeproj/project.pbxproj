@@ -1,0 +1,12 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+		path = ChineseRussianDictionary;
+		sourceTree = "<group>";
+	};
+	rootObject = 1A2B3C4D5E6F7G8H9I0J1K2L /* Project object */;
+}
