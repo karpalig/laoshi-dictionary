@@ -8,24 +8,55 @@ const app = {
 
     async init() {
         try {
-            // Initialize database
+            console.log('🚀 Starting app initialization...');
+            
+            // Initialize database with timeout
+            console.log('📦 Initializing database...');
+            const dbTimeout = setTimeout(() => {
+                console.error('⏰ Database initialization timeout!');
+            }, 5000);
+            
             await db.init();
+            clearTimeout(dbTimeout);
+            console.log('✅ Database initialized');
             
             // Load initial data
+            console.log('📥 Loading data...');
             await this.loadData();
+            console.log('✅ Data loaded:', {
+                dictionaries: this.dictionaries.length,
+                words: this.words.length
+            });
             
             // Setup event listeners
+            console.log('🎯 Setting up event listeners...');
             this.setupEventListeners();
+            console.log('✅ Event listeners ready');
             
             // Hide loading, show app
+            console.log('🎨 Rendering UI...');
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
             
             // Render initial view
             this.renderSearch();
+            console.log('✅ App initialized successfully!');
         } catch (error) {
-            console.error('App initialization failed:', error);
-            alert('Ошибка инициализации приложения. Пожалуйста, перезагрузите страницу.');
+            console.error('❌ App initialization failed:', error);
+            console.error('Error stack:', error.stack);
+            
+            // Show error in UI
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                    <h2 style="color: #ff6b6b; margin-bottom: 12px;">Ошибка инициализации</h2>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">${error.message}</p>
+                    <button class="glass-button" onclick="location.reload()">
+                        Перезагрузить
+                    </button>
+                </div>
+            `;
         }
     },
 

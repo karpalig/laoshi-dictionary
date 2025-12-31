@@ -9,15 +9,29 @@ class DatabaseManager {
 
     async init() {
         return new Promise((resolve, reject) => {
+            console.log('🔧 Opening IndexedDB...');
+            
+            if (!window.indexedDB) {
+                console.error('❌ IndexedDB not supported!');
+                reject(new Error('IndexedDB не поддерживается этим браузером'));
+                return;
+            }
+            
             const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-            request.onerror = () => reject(request.error);
+            request.onerror = () => {
+                console.error('❌ IndexedDB error:', request.error);
+                reject(request.error);
+            };
+            
             request.onsuccess = () => {
+                console.log('✅ IndexedDB opened successfully');
                 this.db = request.result;
                 resolve(this.db);
             };
 
             request.onupgradeneeded = (event) => {
+                console.log('🔄 Upgrading database schema...');
                 const db = event.target.result;
 
                 // Dictionaries store
