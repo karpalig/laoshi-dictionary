@@ -104,16 +104,183 @@
     <script src="js/db.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // Initialize app
-        window.addEventListener('DOMContentLoaded', () => {
-            app.init();
+        // Debug mode - show console in UI
+        const DEBUG = true;
+        
+        if (DEBUG) {
+            // Create debug overlay
+            const debugOverlay = document.createElement('div');
+            debugOverlay.id = 'debug-overlay';
+            debugOverlay.style.cssText = `
+                position: fixed;
+                bottom: 80px;
+                left: 10px;
+                right: 10px;
+                max-height: 200px;
+                overflow-y: auto;
+                background: rgba(0,0,0,0.95);
+                color: #0f0;
+                font-family: monospace;
+                font-size: 11px;
+                padding: 10px;
+                border-radius: 8px;
+                z-index: 9999;
+                display: none;
+            `;
+            document.body.appendChild(debugOverlay);
+            
+            // Override console.log
+            const originalLog = console.log;
+            const originalError = console.error;
+            
+            window.debugLog = function(msg, type = 'log') {
+                const line = document.createElement('div');
+                line.style.marginBottom = '4px';
+                line.style.color = type === 'error' ? '#ff6b6b' : 
+                                  type === 'success' ? '#22c55e' : 
+                                  type === 'warning' ? '#f59e0b' : '#0f0';
+                line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                debugOverlay.appendChild(line);
+                debugOverlay.scrollTop = debugOverlay.scrollHeight;
+                debugOverlay.style.display = 'block';
+                
+                // Also log to console
+                if (type === 'error') {
+                    originalError(msg);
+                } else {
+                    originalLog(msg);
+                }
+            };
+            
+            console.log = function(...args) {
+                debugLog(args.join(' '), 'log');
+            };
+            
+            console.error = function(...args) {
+                debugLog('ERROR: ' + args.join(' '), 'error');
+            };
+            
+            // Add toggle button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.textContent = '🐛 Debug';
+            toggleBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 10px;
+                background: #00CCFF;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                z-index: 10000;
+                cursor: pointer;
+            `;
+            toggleBtn.onclick = () => {
+                debugOverlay.style.display = debugOverlay.style.display === 'none' ? 'block' : 'none';
+            };
+            document.body.appendChild(toggleBtn);
+            
+            debugLog('🐛 Debug mode enabled', 'success');
+        }
+        
+        // Initialize app with error handling
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 DOM loaded, starting initialization...');
+            
+            try {
+                // Check if app object exists
+                if (typeof app === 'undefined') {
+                    throw new Error('app.js не загружен!');
+                }
+                
+                console.log('✅ app.js loaded');
+                
+                // Check if db object exists
+                if (typeof db === 'undefined') {
+                    throw new Error('db.js не загружен!');
+                }
+                
+                console.log('✅ db.js loaded');
+                
+                // Check if PinyinHelper exists
+                if (typeof PinyinHelper === 'undefined') {
+                    throw new Error('pinyin.js не загружен!');
+                }
+                
+                console.log('✅ pinyin.js loaded');
+                
+                // Check IndexedDB support
+                if (!window.indexedDB) {
+                    throw new Error('IndexedDB не поддерживается в этом браузере!');
+                }
+                
+                console.log('✅ IndexedDB supported');
+                
+                // Initialize app
+                console.log('▶️ Calling app.init()...');
+                await app.init();
+                
+            } catch (error) {
+                console.error('❌ Initialization failed:', error.message);
+                console.error('Stack:', error.stack);
+                
+                // Show error in loading screen
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.innerHTML = `
+                        <div style="text-align: center; padding: 20px; max-width: 400px; margin: 0 auto;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                            <h2 style="color: #ff6b6b; margin-bottom: 12px; font-size: 20px;">Ошибка загрузки</h2>
+                            <p style="color: rgba(255,255,255,0.7); margin-bottom: 8px; font-size: 14px;">${error.message}</p>
+                            <details style="margin: 16px 0; text-align: left;">
+                                <summary style="cursor: pointer; color: #00CCFF; font-size: 13px;">Показать детали</summary>
+                                <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto; margin-top: 8px;">${error.stack || 'Нет стека'}</pre>
+                            </details>
+                            <button class="glass-button" onclick="location.reload()" style="margin-top: 12px;">
+                                Перезагрузить
+                            </button>
+                            <button class="glass-button" onclick="clearAllData()" style="margin-top: 8px; background: #ff6b6b;">
+                                Очистить данные
+                            </button>
+                        </div>
+                    `;
+                }
+            }
         });
+        
+        // Clear all data function
+        window.clearAllData = function() {
+            if (confirm('Очистить все данные IndexedDB и перезагрузить?')) {
+                console.log('🗑️ Clearing all data...');
+                
+                // Clear IndexedDB
+                indexedDB.deleteDatabase('ChineseRussianDictionary');
+                
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Unregister service worker
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(reg => reg.unregister());
+                    });
+                }
+                
+                setTimeout(() => {
+                    console.log('✅ Data cleared, reloading...');
+                    location.reload();
+                }, 500);
+            }
+        };
 
-        // Register service worker
+        // Register service worker (optional, won't block app)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker registered'))
-                .catch(err => console.log('Service Worker registration failed'));
+                .then(reg => console.log('✅ Service Worker registered'))
+                .catch(err => console.log('⚠️ Service Worker registration failed:', err));
+        } else {
+            console.log('⚠️ Service Worker not supported');
         }
     </script>
 </body>
