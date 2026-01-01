@@ -418,9 +418,10 @@ const app = {
             
             // Try multiple paths for HSK 1 dictionary
             const paths = [
+                'https://raw.githubusercontent.com/karpalig/laoshi-dictionary/main/examples/hsk1_basic.json',
                 'examples/hsk1_basic.json',
                 './examples/hsk1_basic.json',
-                '/examples/hsk1_basic.json'
+                '/laoshi-dictionary/examples/hsk1_basic.json'
             ];
             
             let data = null;
