@@ -1,3 +1,6 @@
+// Framework7 App Instance
+let f7App = null;
+
 // Main Application Controller
 const app = {
     currentTab: 'search',
@@ -5,10 +8,25 @@ const app = {
     words: [],
     searchResults: [],
     favoriteWords: [],
+    f7: null, // Framework7 instance
 
     async init() {
         try {
             console.log('🚀 Starting app initialization...');
+            
+            // Initialize Framework7
+            if (typeof Framework7 !== 'undefined') {
+                f7App = new Framework7({
+                    el: '#app',
+                    theme: 'ios',
+                    darkMode: 'auto',
+                    colors: {
+                        primary: '#00CCFF',
+                    },
+                });
+                this.f7 = f7App;
+                console.log('✅ Framework7 initialized');
+            }
             
             // Initialize database with timeout
             console.log('📦 Initializing database...');
@@ -178,26 +196,30 @@ const app = {
 
     // Card creators
     createWordCard(word) {
+        if (!word) return '';
+        
         const dict = this.dictionaries.find(d => d.id === word.dictionaryId);
-        const hskBadge = word.hskLevel > 0 ? `<span class="hsk-badge">HSK ${word.hskLevel}</span>` : '';
-        const dictName = dict ? `<span class="meta-text">${dict.name}</span>` : '';
+        const hskBadge = word.hskLevel > 0 ? `<span class="badge color-blue">HSK ${word.hskLevel}</span>` : '';
+        const dictName = dict ? `<span class="text-color-gray" style="font-size: 12px;">${dict.name || ''}</span>` : '';
         const favoriteIcon = word.isFavorite ? '⭐' : '☆';
 
         return `
-            <div class="word-card" onclick="app.showWordDetail('${word.id}')">
-                <div class="word-card-header">
-                    <div class="word-info">
-                        <h3 class="chinese">${word.chinese}</h3>
-                        <div class="word-pinyin">${word.pinyin}</div>
+            <div class="card" onclick="app.showWordDetail('${word.id}')" style="cursor: pointer;">
+                <div class="card-content card-content-padding">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <h3 class="chinese" style="margin: 0 0 6px 0; font-size: 28px; font-weight: 700;">${word.chinese || ''}</h3>
+                            <div class="text-color-blue" style="font-size: 14px;">${word.pinyin || ''}</div>
+                        </div>
+                        <button class="button button-small" onclick="event.stopPropagation(); app.toggleFavorite('${word.id}')" style="min-width: auto; padding: 4px 8px;">
+                            ${favoriteIcon}
+                        </button>
                     </div>
-                    <button class="favorite-btn" onclick="event.stopPropagation(); app.toggleFavorite('${word.id}')">
-                        ${favoriteIcon}
-                    </button>
-                </div>
-                <div class="word-translation">${word.russian}</div>
-                <div class="word-meta">
-                    ${hskBadge}
-                    ${dictName}
+                    <div style="font-size: 18px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">${word.russian || ''}</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        ${hskBadge}
+                        ${dictName}
+                    </div>
                 </div>
             </div>
         `;
@@ -209,17 +231,21 @@ const app = {
         const colorStyle = `background-color: ${this.getColorValue(dict.color)}`;
 
         return `
-            <div class="dict-card" onclick="app.showDictionaryDetail('${dict.id}')">
-                <div class="dict-icon" style="${colorStyle}">
-                    📚
-                </div>
-                <div class="dict-info">
-                    <h3>${dict.name}</h3>
-                    ${dict.description ? `<div class="dict-description">${dict.description}</div>` : ''}
-                    <div class="dict-count">${wordsCount} слов</div>
-                </div>
-                <div class="dict-active" onclick="event.stopPropagation(); app.toggleDictionaryActive('${dict.id}')">
-                    ${activeIcon}
+            <div class="card" onclick="app.showDictionaryDetail('${dict.id}')" style="cursor: pointer;">
+                <div class="card-content card-content-padding">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; ${colorStyle}">
+                            📚
+                        </div>
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600;">${dict.name}</h3>
+                            ${dict.description ? `<div class="text-color-gray" style="font-size: 14px; margin-bottom: 4px;">${dict.description}</div>` : ''}
+                            <div class="text-color-gray" style="font-size: 12px;">${wordsCount} слов</div>
+                        </div>
+                        <button class="button button-small" onclick="event.stopPropagation(); app.toggleDictionaryActive('${dict.id}')" style="min-width: auto; padding: 4px 8px;">
+                            ${activeIcon}
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -308,22 +334,58 @@ const app = {
     },
 
     showModal(title, content) {
-        const modalHTML = `
-            <div class="modal-overlay" onclick="if(event.target === this) app.closeModal()">
-                <div class="modal">
-                    <div class="modal-header">
-                        <h2>${title}</h2>
-                        <button class="close-button" onclick="app.closeModal()">&times;</button>
+        // Use Framework7 Popup if available, otherwise fallback to custom modal
+        if (this.f7) {
+            const popupHTML = `
+                <div class="popup">
+                    <div class="view">
+                        <div class="page">
+                            <div class="navbar">
+                                <div class="navbar-bg"></div>
+                                <div class="navbar-inner">
+                                    <div class="title">${title}</div>
+                                    <div class="right">
+                                        <a class="link popup-close">
+                                            <i class="icon f7-icons">xmark</i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="page-content">
+                                ${content}
+                            </div>
+                        </div>
                     </div>
-                    ${content}
                 </div>
-            </div>
-        `;
-        document.getElementById('modal-container').innerHTML = modalHTML;
+            `;
+            
+            this.f7.popup.create({
+                content: popupHTML,
+                closeByBackdropClick: true,
+            }).open();
+        } else {
+            // Fallback to custom modal
+            const modalHTML = `
+                <div class="modal-overlay" onclick="if(event.target === this) app.closeModal()">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h2>${title}</h2>
+                            <button class="close-button" onclick="app.closeModal()">&times;</button>
+                        </div>
+                        ${content}
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-container').innerHTML = modalHTML;
+        }
     },
 
     closeModal() {
-        document.getElementById('modal-container').innerHTML = '';
+        if (this.f7) {
+            this.f7.popup.close();
+        } else {
+            document.getElementById('modal-container').innerHTML = '';
+        }
     },
 
     // Actions
@@ -348,24 +410,30 @@ const app = {
 
     async showWordDetail(wordId) {
         const word = await db.get('words', wordId);
+        
+        if (!word) {
+            alert('Слово не найдено');
+            return;
+        }
+        
         const examples = await db.getExamplesByWord(wordId);
         
         const examplesHTML = examples.length > 0 
             ? examples.map(ex => `
                 <div class="glass-card" style="margin-bottom: 12px;">
-                    <div style="font-size: 18px; margin-bottom: 8px;" class="chinese">${ex.chineseSentence}</div>
-                    <div style="font-size: 14px; color: rgba(0,204,255,0.8); margin-bottom: 8px;">${ex.pinyinSentence}</div>
-                    <div style="font-size: 16px; color: rgba(255,255,255,0.85);">${ex.russianTranslation}</div>
+                    <div style="font-size: 18px; margin-bottom: 8px;" class="chinese">${ex.chineseSentence || ''}</div>
+                    <div style="font-size: 14px; color: rgba(0,204,255,0.8); margin-bottom: 8px;">${ex.pinyinSentence || ''}</div>
+                    <div style="font-size: 16px; color: rgba(255,255,255,0.85);">${ex.russianTranslation || ''}</div>
                 </div>
             `).join('')
             : '<div style="text-align: center; padding: 32px; color: rgba(255,255,255,0.5);">Нет примеров</div>';
 
         this.showModal('Детали слова', `
             <div class="glass-card" style="margin-bottom: 24px;">
-                <div style="font-size: 42px; font-weight: 700; margin-bottom: 12px;" class="chinese">${word.chinese}</div>
-                <div style="font-size: 18px; color: rgba(0,204,255,0.9); margin-bottom: 16px;">${word.pinyin}</div>
+                <div style="font-size: 42px; font-weight: 700; margin-bottom: 12px;" class="chinese">${word.chinese || ''}</div>
+                <div style="font-size: 18px; color: rgba(0,204,255,0.9); margin-bottom: 16px;">${word.pinyin || ''}</div>
                 <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 16px 0;"></div>
-                <div style="font-size: 22px; color: rgba(255,255,255,0.95);">${word.russian}</div>
+                <div style="font-size: 22px; color: rgba(255,255,255,0.95);">${word.russian || ''}</div>
                 ${word.hskLevel > 0 ? `<div class="hsk-badge" style="margin-top: 16px;">HSK ${word.hskLevel}</div>` : ''}
             </div>
             <h3 style="margin-bottom: 12px;">Примеры использования</h3>
@@ -409,106 +477,219 @@ const app = {
     },
 
     // Show dictionary selector modal
-    showDictionarySelector() {
-        const availableDictionaries = [
-            {
-                file: 'examples/hsk1_basic.json',
-                name: '📗 HSK 1 - Базовый',
-                description: '150 слов (русский перевод)',
-                level: 'HSK 1',
-                color: 'green'
-            },
-            {
-                file: 'examples/hsk1_from_clem.json',
-                name: '📗 HSK 1',
-                description: '150 слов (английский)',
-                level: 'HSK 1',
-                color: 'green'
-            },
-            {
-                file: 'examples/hsk2_from_clem.json',
-                name: '📘 HSK 2',
-                description: '150 слов',
-                level: 'HSK 2',
-                color: 'blue'
-            },
-            {
-                file: 'examples/hsk3_from_clem.json',
-                name: '📙 HSK 3',
-                description: '299 слов',
-                level: 'HSK 3',
-                color: 'cyan'
-            },
-            {
-                file: 'examples/hsk4_from_clem.json',
-                name: '📕 HSK 4',
-                description: '601 слово',
-                level: 'HSK 4',
-                color: 'purple'
-            },
-            {
-                file: 'examples/hsk5_from_clem.json',
-                name: '📔 HSK 5',
-                description: '1300 слов',
-                level: 'HSK 5',
-                color: 'pink'
-            },
-            {
-                file: 'examples/hsk6_from_clem.json',
-                name: '📓 HSK 6',
-                description: '2500 слов',
-                level: 'HSK 6',
-                color: 'orange'
-            },
-            {
-                file: 'examples/everyday_chinese.json',
-                name: '💬 Повседневный китайский',
-                description: '50 полезных фраз',
-                level: 'HSK 1-2',
-                color: 'blue'
-            },
-            {
-                file: 'examples/restaurant_food.json',
-                name: '🍜 Ресторан и еда',
-                description: '56 слов (еда, напитки)',
-                level: 'HSK 1-3',
-                color: 'orange'
-            },
-            {
-                file: 'examples/travel_transport.json',
-                name: '✈️ Путешествия',
-                description: '61 слово (транспорт, отели)',
-                level: 'HSK 1-3',
-                color: 'purple'
-            }
-        ];
-
-        const dictionaryCards = availableDictionaries.map(dict => `
-            <div class="glass-card" style="cursor: pointer; margin-bottom: 12px;" onclick="app.loadDictionaryFromFile('${dict.file}')">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <div>
-                        <h3 style="margin: 0 0 8px 0; font-size: 18px;">${dict.name}</h3>
-                        <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">${dict.description}</p>
-                        <span style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px;">
-                            ${dict.level}
-                        </span>
-                    </div>
-                    <div style="font-size: 32px;">→</div>
-                </div>
-            </div>
-        `).join('');
-
-        const modalContent = `
-            <div style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
-                <h2 style="margin: 0 0 16px 0;">Выберите словарь для загрузки</h2>
-                <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
-                    Нажмите на словарь чтобы загрузить его в приложение
+    async showDictionarySelector() {
+        // Show loading state
+        const loadingContent = `
+            <div style="text-align: center; padding: 40px;">
+                <div class="loader" style="margin: 0 auto;"></div>
+                <p style="margin-top: 20px; color: rgba(255,255,255,0.7);">
+                    Сканирование папки examples...
                 </p>
-                ${dictionaryCards}
             </div>
         `;
+        this.showModal('Поиск словарей...', loadingContent);
 
-        this.showModal(modalContent);
+        try {
+            // Get all JSON files from examples folder
+            const discoveredDictionaries = await this.discoverDictionaries();
+            
+            if (discoveredDictionaries.length === 0) {
+                const errorContent = `
+                    <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
+                        Не удалось найти словари в папке examples. Убедитесь, что файлы существуют.
+                    </p>
+                    <button class="glass-button" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
+                        Закрыть
+                    </button>
+                `;
+                this.showModal('Словари не найдены', errorContent);
+                return;
+            }
+
+            const dictionaryCards = discoveredDictionaries.map(dict => {
+                const wordCount = dict.wordCount || 0;
+                const level = dict.level || '';
+                return `
+                    <div class="glass-card" style="cursor: pointer; margin-bottom: 12px;" onclick="app.loadDictionaryFromFile('${dict.file}')">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 8px 0; font-size: 18px;">${dict.name}</h3>
+                                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">${dict.description}</p>
+                                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                                    ${wordCount > 0 ? `<span style="display: inline-block; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px;">
+                                        📊 ${wordCount} ${this.getWordForm(wordCount)}
+                                    </span>` : ''}
+                                    ${level ? `<span style="display: inline-block; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px;">
+                                        ${level}
+                                    </span>` : ''}
+                                </div>
+                            </div>
+                            <div style="font-size: 32px; margin-left: 16px;">→</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const modalContent = `
+                <div style="max-height: 70vh; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none;">
+                    <style>
+                        div[style*="overflow-y: auto"]::-webkit-scrollbar {
+                            display: none;
+                        }
+                    </style>
+                    <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
+                        Найдено словарей: ${discoveredDictionaries.length}
+                    </p>
+                    ${dictionaryCards}
+                </div>
+            `;
+
+            this.showModal('Выберите словарь для загрузки', modalContent);
+        } catch (error) {
+            console.error('Ошибка при поиске словарей:', error);
+            const errorContent = `
+                <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
+                    ${error.message}
+                </p>
+                <button class="glass-button" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
+                    Закрыть
+                </button>
+            `;
+            this.showModal('Ошибка', errorContent);
+        }
+    },
+
+    // Helper function to get correct word form in Russian
+    getWordForm(count) {
+        const lastDigit = count % 10;
+        const lastTwoDigits = count % 100;
+        
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+            return 'слов';
+        }
+        if (lastDigit === 1) {
+            return 'слово';
+        }
+        if (lastDigit >= 2 && lastDigit <= 4) {
+            return 'слова';
+        }
+        return 'слов';
+    },
+
+    // Discover all dictionaries in examples folder
+    async discoverDictionaries() {
+        const discovered = [];
+        const paths = ['', './', '/'];
+        
+        // First, try to fetch an index file if it exists
+        let indexFiles = null;
+        for (const basePath of paths) {
+            try {
+                const indexUrl = basePath + 'examples/index.json';
+                const response = await fetch(indexUrl);
+                if (response.ok) {
+                    indexFiles = await response.json();
+                    console.log('✅ Найден индексный файл со словарями');
+                    break;
+                }
+            } catch (e) {
+                // Index file doesn't exist, continue
+            }
+        }
+        
+        // If index file exists, use it
+        if (indexFiles && Array.isArray(indexFiles.dictionaries)) {
+            for (const dictInfo of indexFiles.dictionaries) {
+                for (const basePath of paths) {
+                    try {
+                        const url = basePath + dictInfo.file;
+                        const response = await fetch(url);
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            if (data && typeof data === 'object' && data.words && Array.isArray(data.words)) {
+                                discovered.push({
+                                    file: url,
+                                    name: data.name || dictInfo.name || dictInfo.file.split('/').pop().replace('.json', ''),
+                                    description: data.description || dictInfo.description || `${data.words.length} слов`,
+                                    color: data.color || dictInfo.color || 'blue',
+                                    wordCount: data.words.length,
+                                    level: dictInfo.level || this.extractLevelFromFilename(dictInfo.file)
+                                });
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+            }
+        } else {
+            // Fallback: try to discover dictionaries by attempting to fetch known files
+            // This list can be extended, but ideally use index.json
+            const potentialFiles = [
+                'examples/hsk1_basic.json',
+                'examples/hsk1_from_clem.json',
+                'examples/hsk2_from_clem.json',
+                'examples/hsk3_from_clem.json',
+                'examples/hsk4_from_clem.json',
+                'examples/hsk5_from_clem.json',
+                'examples/hsk6_from_clem.json',
+                'examples/everyday_chinese.json',
+                'examples/restaurant_food.json',
+                'examples/travel_transport.json',
+                'examples/sample_dictionary.json'
+            ];
+
+            // Try to discover dictionaries by attempting to fetch them
+            for (const file of potentialFiles) {
+                for (const basePath of paths) {
+                    try {
+                        const url = basePath + file;
+                        const response = await fetch(url);
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            // Validate that it's a dictionary file
+                            if (data && typeof data === 'object' && data.words && Array.isArray(data.words)) {
+                                discovered.push({
+                                    file: url,
+                                    name: data.name || file.split('/').pop().replace('.json', ''),
+                                    description: data.description || `${data.words.length} слов`,
+                                    color: data.color || 'blue',
+                                    wordCount: data.words.length,
+                                    level: this.extractLevelFromFilename(file)
+                                });
+                                
+                                console.log(`✅ Найден словарь: ${data.name} (${data.words.length} слов)`);
+                                break; // Found this file, no need to try other paths
+                            }
+                        }
+                    } catch (e) {
+                        // File doesn't exist or can't be read, continue
+                        continue;
+                    }
+                }
+            }
+        }
+
+        // Sort by name
+        discovered.sort((a, b) => a.name.localeCompare(b.name));
+        
+        return discovered;
+    },
+
+    // Extract HSK level from filename
+    extractLevelFromFilename(filename) {
+        if (filename.includes('hsk1')) return 'HSK 1';
+        if (filename.includes('hsk2')) return 'HSK 2';
+        if (filename.includes('hsk3')) return 'HSK 3';
+        if (filename.includes('hsk4')) return 'HSK 4';
+        if (filename.includes('hsk5')) return 'HSK 5';
+        if (filename.includes('hsk6')) return 'HSK 6';
+        return '';
     },
 
     // Load dictionary from file

@@ -13,6 +13,9 @@
     
     <title>汉俄词典 - Chinese-Russian Dictionary</title>
     
+    <!-- Framework7 iOS Theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/framework7@8/css/framework7.bundle.min.css">
+    
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
     
@@ -39,11 +42,9 @@
                         <h1>Поиск</h1>
                     </div>
                     <div class="search-container">
-                        <div class="glass-input">
-                            <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            <input type="text" id="search-input" placeholder="汉字, pinyin, русский..." autocomplete="off">
+                        <div class="search-input-wrapper">
+                            <input type="text" id="search-input" class="search-input" placeholder="汉字, pinyin, русский..." autocomplete="off">
+                            <i class="icon icon-search search-icon"></i>
                         </div>
                     </div>
                     <div id="search-results" class="results-container"></div>
@@ -74,12 +75,9 @@
                     </div>
                     
                     <!-- Quick load buttons -->
-                    <div style="padding: 0 20px 16px 20px; display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button class="glass-button" onclick="app.showDictionarySelector()" style="flex: 1; min-width: 200px; font-size: 14px; padding: 10px 16px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.6) 0%, rgba(16, 185, 129, 0.6) 100%);">
+                    <div class="quick-load-container">
+                        <button class="load-dictionary-btn" onclick="app.showDictionarySelector()">
                             📚 Загрузить словарь
-                        </button>
-                        <button class="glass-button" onclick="app.createSampleData()" style="flex: 1; min-width: 140px; font-size: 14px; padding: 10px 16px; background: rgba(139, 92, 246, 0.5);">
-                            🎯 Примеры (5 слов)
                         </button>
                     </div>
                     
@@ -123,6 +121,7 @@
     <div id="modal-container"></div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/framework7@8/js/framework7.bundle.min.js"></script>
     <script src="js/pinyin.js"></script>
     <script src="js/db.js"></script>
     <script src="js/app.js"></script>

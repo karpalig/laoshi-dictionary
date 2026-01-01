@@ -1,0 +1,82 @@
+{
+  "dictionaries": [
+    {
+      "file": "examples/hsk1_basic.json",
+      "name": "HSK 1 - Базовый уровень",
+      "description": "150 базовых слов для начинающих",
+      "color": "green",
+      "level": "HSK 1"
+    },
+    {
+      "file": "examples/hsk1_from_clem.json",
+      "name": "HSK 1",
+      "description": "150 слов",
+      "color": "green",
+      "level": "HSK 1"
+    },
+    {
+      "file": "examples/hsk2_from_clem.json",
+      "name": "HSK 2",
+      "description": "150 слов",
+      "color": "blue",
+      "level": "HSK 2"
+    },
+    {
+      "file": "examples/hsk3_from_clem.json",
+      "name": "HSK 3",
+      "description": "299 слов",
+      "color": "cyan",
+      "level": "HSK 3"
+    },
+    {
+      "file": "examples/hsk4_from_clem.json",
+      "name": "HSK 4",
+      "description": "601 слово",
+      "color": "purple",
+      "level": "HSK 4"
+    },
+    {
+      "file": "examples/hsk5_from_clem.json",
+      "name": "HSK 5",
+      "description": "1300 слов",
+      "color": "pink",
+      "level": "HSK 5"
+    },
+    {
+      "file": "examples/hsk6_from_clem.json",
+      "name": "HSK 6",
+      "description": "2500 слов",
+      "color": "orange",
+      "level": "HSK 6"
+    },
+    {
+      "file": "examples/everyday_chinese.json",
+      "name": "Повседневный китайский",
+      "description": "Полезные фразы для повседневного общения",
+      "color": "blue",
+      "level": "HSK 1-2"
+    },
+    {
+      "file": "examples/restaurant_food.json",
+      "name": "Ресторан и еда",
+      "description": "Лексика для ресторанов, еды и напитков",
+      "color": "orange",
+      "level": "HSK 1-3"
+    },
+    {
+      "file": "examples/travel_transport.json",
+      "name": "Путешествия и транспорт",
+      "description": "Полезная лексика для путешествий по Китаю",
+      "color": "purple",
+      "level": "HSK 1-3"
+    },
+    {
+      "file": "examples/sample_dictionary.json",
+      "name": "Пример словаря HSK 1",
+      "description": "Базовые слова для начинающих",
+      "color": "green",
+      "level": "HSK 1"
+    }
+  ]
+}
+
