@@ -226,7 +226,14 @@ const app = {
     },
 
     getEmptyState(icon, title, subtitle, showButton = false) {
-        const button = showButton ? '<button class="glass-button" onclick="app.createSampleData()">Загрузить примеры</button>' : '';
+        const buttons = showButton ? `
+            <button class="glass-button" onclick="app.loadDefaultDictionary()" style="margin-bottom: 12px; background: rgba(34, 197, 94, 0.6);">
+                📚 Загрузить HSK 1 (150 слов)
+            </button>
+            <button class="glass-button" onclick="app.createSampleData()" style="background: rgba(139, 92, 246, 0.6);">
+                Загрузить примеры (5 слов)
+            </button>
+        ` : '';
         
         return `
             <div class="empty-state">
@@ -235,7 +242,7 @@ const app = {
                 </svg>
                 <h3>${title}</h3>
                 <p>${subtitle}</p>
-                ${button}
+                ${buttons}
             </div>
         `;
     },
