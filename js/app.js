@@ -411,25 +411,55 @@ const app = {
     // Load default dictionary (HSK 1)
     async loadDefaultDictionary() {
         try {
-            console.log('📥 Loading default HSK 1 dictionary...');
+            console.log('📥 Начинаем загрузку HSK 1...');
             
-            // Fetch HSK 1 dictionary
-            const response = await fetch('examples/hsk1_basic.json');
-            if (!response.ok) {
-                throw new Error('Failed to load HSK 1 dictionary');
+            // Show loading indicator
+            const loadingMsg = alert('⏳ Загрузка HSK 1 словаря...');
+            
+            // Try multiple paths for HSK 1 dictionary
+            const paths = [
+                'examples/hsk1_basic.json',
+                './examples/hsk1_basic.json',
+                '/examples/hsk1_basic.json'
+            ];
+            
+            let data = null;
+            let successPath = null;
+            
+            for (const path of paths) {
+                try {
+                    console.log(`Пробую загрузить: ${path}`);
+                    const response = await fetch(path);
+                    if (response.ok) {
+                        data = await response.json();
+                        successPath = path;
+                        console.log(`✅ Успешно загружено из: ${path}`);
+                        break;
+                    }
+                } catch (e) {
+                    console.log(`❌ Не удалось загрузить из: ${path}`, e);
+                }
             }
             
-            const data = await response.json();
+            if (!data) {
+                throw new Error('Не удалось найти файл hsk1_basic.json. Проверьте, что файлы загружены на сервер.');
+            }
+            
+            console.log(`📊 Найдено слов: ${data.words?.length || 0}`);
             
             // Create dictionary
             const dict = await db.createDictionary(
-                data.name,
-                data.description,
+                data.name || 'HSK 1',
+                data.description || 'Базовый уровень',
                 data.color || 'green'
             );
             
+            console.log(`📚 Создан словарь: ${dict.name} (ID: ${dict.id})`);
+            
             // Import words
             let imported = 0;
+            let errors = 0;
+            
             for (const word of data.words || []) {
                 try {
                     await db.createWord(
@@ -440,8 +470,14 @@ const app = {
                         word.hskLevel || 0
                     );
                     imported++;
+                    
+                    // Log progress every 50 words
+                    if (imported % 50 === 0) {
+                        console.log(`⏳ Импортировано: ${imported}/${data.words.length}`);
+                    }
                 } catch (e) {
-                    console.error('Error importing word:', word, e);
+                    errors++;
+                    console.error('❌ Ошибка импорта слова:', word, e);
                 }
             }
             
@@ -449,12 +485,12 @@ const app = {
             this.renderSearch();
             this.renderDictionaries();
             
-            console.log(`✅ Loaded HSK 1: ${imported} words`);
-            alert(`✅ Загружен словарь HSK 1: ${imported} слов`);
+            console.log(`✅ Импорт завершен: ${imported} слов, ошибок: ${errors}`);
+            alert(`✅ Загружен словарь HSK 1!\n\n📊 Импортировано: ${imported} слов\n❌ Ошибок: ${errors}`);
             
         } catch (error) {
-            console.error('Error loading default dictionary:', error);
-            alert('❌ Ошибка загрузки словаря: ' + error.message);
+            console.error('❌ Критическая ошибка загрузки:', error);
+            alert(`❌ Ошибка загрузки HSK 1:\n\n${error.message}\n\nОткройте консоль (F12) для подробностей.`);
         }
     },
 
