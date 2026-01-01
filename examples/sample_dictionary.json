@@ -1,0 +1,68 @@
+{
+  "name": "Пример словаря HSK 1",
+  "description": "Базовые слова для начинающих",
+  "color": "green",
+  "words": [
+    {
+      "chinese": "你好",
+      "pinyin": "ni3 hao3",
+      "russian": "Привет, здравствуйте",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "谢谢",
+      "pinyin": "xie4xie",
+      "russian": "Спасибо",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "再见",
+      "pinyin": "zai4jian4",
+      "russian": "До свидания",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "是",
+      "pinyin": "shi4",
+      "russian": "быть, являться",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "不",
+      "pinyin": "bu4",
+      "russian": "не, нет",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "我",
+      "pinyin": "wo3",
+      "russian": "я",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "你",
+      "pinyin": "ni3",
+      "russian": "ты",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "他",
+      "pinyin": "ta1",
+      "russian": "он",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "她",
+      "pinyin": "ta1",
+      "russian": "она",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "好",
+      "pinyin": "hao3",
+      "russian": "хороший, хорошо",
+      "hskLevel": 1
+    }
+  ],
+  "version": "1.0"
+}
