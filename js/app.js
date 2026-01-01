@@ -375,14 +375,20 @@ const app = {
             : '<div style="text-align: center; padding: 32px; color: rgba(255,255,255,0.5);">Нет слов</div>';
 
         this.showModal(dict.name, `
-            <div class="glass-card" style="margin-bottom: 24px;">
+            <div class="glass-card" style="margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 16px;">
                     <div class="dict-icon" style="width: 60px; height: 60px; background-color: ${this.getColorValue(dict.color)};">📚</div>
-                    <div>
+                    <div style="flex: 1;">
                         <h2 style="margin-bottom: 4px;">${dict.name}</h2>
                         ${dict.description ? `<p style="color: rgba(255,255,255,0.7);">${dict.description}</p>` : ''}
+                        <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 4px;">${words.length} слов</p>
                     </div>
                 </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <button class="glass-button" onclick="app.exportDictionary('${dictId}')" style="width: 100%;">
+                    📥 Экспортировать словарь
+                </button>
             </div>
             ${wordsHTML}
         `);
@@ -405,5 +411,219 @@ const app = {
             'orange': '#f97316'
         };
         return colors[colorName] || '#00CCFF';
+    },
+
+    // Import/Export functions
+    showImportDialog() {
+        this.showModal('Импорт словаря', `
+            <div class="form-group">
+                <label>Формат импорта:</label>
+                <select id="import-format" style="width: 100%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 16px;">
+                    <option value="json">JSON (полный)</option>
+                    <option value="csv">CSV (слова)</option>
+                    <option value="txt">TXT (построчно)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Выберите файл:</label>
+                <input type="file" id="import-file" accept=".json,.csv,.txt" style="width: 100%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white;">
+            </div>
+            <div class="form-group">
+                <label>Название словаря:</label>
+                <input type="text" id="import-dict-name" placeholder="Импортированный словарь" style="width: 100%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 16px;">
+            </div>
+            <button class="glass-button" onclick="app.handleImport()" style="width: 100%; margin-top: 16px;">
+                Импортировать
+            </button>
+            <details style="margin-top: 16px; color: rgba(255,255,255,0.7);">
+                <summary style="cursor: pointer; font-size: 14px;">Форматы файлов</summary>
+                <div style="margin-top: 12px; font-size: 13px; line-height: 1.6;">
+                    <p><strong>JSON:</strong></p>
+                    <pre style="background: #000; padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 11px;">{
+  "name": "Словарь",
+  "words": [
+    {
+      "chinese": "你好",
+      "pinyin": "ni3 hao3",
+      "russian": "Привет",
+      "hskLevel": 1
+    }
+  ]
+}</pre>
+                    <p style="margin-top: 8px;"><strong>CSV (разделитель ;):</strong></p>
+                    <pre style="background: #000; padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 11px;">chinese;pinyin;russian;hsk
+你好;ni3 hao3;Привет;1
+谢谢;xie4xie;Спасибо;1</pre>
+                    <p style="margin-top: 8px;"><strong>TXT (одна строка = одно слово):</strong></p>
+                    <pre style="background: #000; padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 11px;">你好 | ni3 hao3 | Привет | 1
+谢谢 | xie4xie | Спасибо | 1</pre>
+                </div>
+            </details>
+        `);
+    },
+
+    async handleImport() {
+        const format = document.getElementById('import-format').value;
+        const fileInput = document.getElementById('import-file');
+        const dictName = document.getElementById('import-dict-name').value || 'Импортированный словарь';
+
+        if (!fileInput.files[0]) {
+            alert('Выберите файл для импорта');
+            return;
+        }
+
+        try {
+            const file = fileInput.files[0];
+            const text = await file.text();
+            let data;
+
+            if (format === 'json') {
+                data = JSON.parse(text);
+            } else if (format === 'csv') {
+                data = this.parseCSV(text);
+            } else if (format === 'txt') {
+                data = this.parseTXT(text);
+            }
+
+            // Create dictionary
+            const dict = await db.createDictionary(
+                data.name || dictName,
+                data.description || `Импортировано из ${file.name}`,
+                data.color || 'cyan'
+            );
+
+            // Import words
+            let imported = 0;
+            for (const word of data.words || []) {
+                try {
+                    await db.createWord(
+                        word.chinese,
+                        word.pinyin,
+                        word.russian,
+                        dict.id,
+                        word.hskLevel || 0
+                    );
+                    imported++;
+                } catch (e) {
+                    console.error('Error importing word:', word, e);
+                }
+            }
+
+            await this.loadData();
+            this.renderDictionaries();
+            this.closeModal();
+            
+            alert(`✅ Импортировано: ${imported} слов`);
+        } catch (error) {
+            console.error('Import error:', error);
+            alert('❌ Ошибка импорта: ' + error.message);
+        }
+    },
+
+    parseCSV(text) {
+        const lines = text.trim().split('\n');
+        const words = [];
+        
+        // Skip header
+        for (let i = 1; i < lines.length; i++) {
+            const parts = lines[i].split(';');
+            if (parts.length >= 3) {
+                words.push({
+                    chinese: parts[0].trim(),
+                    pinyin: parts[1].trim(),
+                    russian: parts[2].trim(),
+                    hskLevel: parseInt(parts[3]) || 0
+                });
+            }
+        }
+        
+        return { words };
+    },
+
+    parseTXT(text) {
+        const lines = text.trim().split('\n');
+        const words = [];
+        
+        for (const line of lines) {
+            const parts = line.split('|').map(s => s.trim());
+            if (parts.length >= 3) {
+                words.push({
+                    chinese: parts[0],
+                    pinyin: parts[1],
+                    russian: parts[2],
+                    hskLevel: parseInt(parts[3]) || 0
+                });
+            }
+        }
+        
+        return { words };
+    },
+
+    async exportDictionary(dictId) {
+        const dict = await db.get('dictionaries', dictId);
+        const words = await db.getWordsByDictionary(dictId);
+        
+        const exportData = {
+            name: dict.name,
+            description: dict.description,
+            color: dict.color,
+            words: words.map(w => ({
+                chinese: w.chinese,
+                pinyin: w.pinyin,
+                russian: w.russian,
+                hskLevel: w.hskLevel
+            })),
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+        };
+
+        // Download as JSON
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+            type: 'application/json'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${dict.name.replace(/[^a-zа-яё0-9]/gi, '_')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        console.log(`✅ Экспортировано: ${words.length} слов`);
+    },
+
+    async exportAllData() {
+        const dictionaries = await db.getAllDictionaries();
+        const allData = [];
+
+        for (const dict of dictionaries) {
+            const words = await db.getWordsByDictionary(dict.id);
+            allData.push({
+                name: dict.name,
+                description: dict.description,
+                color: dict.color,
+                words: words.map(w => ({
+                    chinese: w.chinese,
+                    pinyin: w.pinyin,
+                    russian: w.russian,
+                    hskLevel: w.hskLevel
+                }))
+            });
+        }
+
+        const exportData = {
+            dictionaries: allData,
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+            type: 'application/json'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `all_dictionaries_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 };
