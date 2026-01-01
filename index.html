@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Китайско-русский словарь с glass design">
+    <meta name="theme-color" content="#00CCFF">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <title>汉俄词典 - Chinese-Russian Dictionary</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading screen -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loader"></div>
+            <p>Загрузка словаря...</p>
+        </div>
+
+        <!-- Main app -->
+        <div id="main-app" class="hidden">
+            <!-- Tab content -->
+            <div id="tab-content" class="tab-content">
+                <!-- Search tab -->
+                <div id="search-tab" class="tab-pane active">
+                    <div class="page-header">
+                        <h1>Поиск</h1>
+                    </div>
+                    <div class="search-container">
+                        <div class="glass-input">
+                            <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="汉字, pinyin, русский..." autocomplete="off">
+                        </div>
+                    </div>
+                    <div id="search-results" class="results-container"></div>
+                </div>
+
+                <!-- Dictionaries tab -->
+                <div id="dictionaries-tab" class="tab-pane">
+                    <div class="page-header">
+                        <h1>Словари</h1>
+                        <button class="icon-button" onclick="app.showAddDictionary()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dictionaries-list" class="list-container"></div>
+                </div>
+
+                <!-- Favorites tab -->
+                <div id="favorites-tab" class="tab-pane">
+                    <div class="page-header">
+                        <h1>Избранное</h1>
+                    </div>
+                    <div id="favorites-list" class="list-container"></div>
+                </div>
+            </div>
+
+            <!-- Bottom navigation -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-tab="search" onclick="app.switchTab('search')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>Поиск</span>
+                </button>
+                <button class="nav-item" data-tab="dictionaries" onclick="app.switchTab('dictionaries')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>Словари</span>
+                </button>
+                <button class="nav-item" data-tab="favorites" onclick="app.switchTab('favorites')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Избранное</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Modal container -->
+    <div id="modal-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/pinyin.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Debug mode - show console in UI
+        const DEBUG = true;
+        
+        if (DEBUG) {
+            // Create debug overlay
+            const debugOverlay = document.createElement('div');
+            debugOverlay.id = 'debug-overlay';
+            debugOverlay.style.cssText = `
+                position: fixed;
+                bottom: 80px;
+                left: 10px;
+                right: 10px;
+                max-height: 200px;
+                overflow-y: auto;
+                background: rgba(0,0,0,0.95);
+                color: #0f0;
+                font-family: monospace;
+                font-size: 11px;
+                padding: 10px;
+                border-radius: 8px;
+                z-index: 9999;
+                display: none;
+            `;
+            document.body.appendChild(debugOverlay);
+            
+            // Override console.log
+            const originalLog = console.log;
+            const originalError = console.error;
+            
+            window.debugLog = function(msg, type = 'log') {
+                const line = document.createElement('div');
+                line.style.marginBottom = '4px';
+                line.style.color = type === 'error' ? '#ff6b6b' : 
+                                  type === 'success' ? '#22c55e' : 
+                                  type === 'warning' ? '#f59e0b' : '#0f0';
+                line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                debugOverlay.appendChild(line);
+                debugOverlay.scrollTop = debugOverlay.scrollHeight;
+                debugOverlay.style.display = 'block';
+                
+                // Also log to console
+                if (type === 'error') {
+                    originalError(msg);
+                } else {
+                    originalLog(msg);
+                }
+            };
+            
+            console.log = function(...args) {
+                debugLog(args.join(' '), 'log');
+            };
+            
+            console.error = function(...args) {
+                debugLog('ERROR: ' + args.join(' '), 'error');
+            };
+            
+            // Add toggle button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.textContent = '🐛 Debug';
+            toggleBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 10px;
+                background: #00CCFF;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                z-index: 10000;
+                cursor: pointer;
+            `;
+            toggleBtn.onclick = () => {
+                debugOverlay.style.display = debugOverlay.style.display === 'none' ? 'block' : 'none';
+            };
+            document.body.appendChild(toggleBtn);
+            
+            debugLog('🐛 Debug mode enabled', 'success');
+        }
+        
+        // Initialize app with error handling
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 DOM loaded, starting initialization...');
+            
+            try {
+                // Check if app object exists
+                if (typeof app === 'undefined') {
+                    throw new Error('app.js не загружен!');
+                }
+                
+                console.log('✅ app.js loaded');
+                
+                // Check if db object exists
+                if (typeof db === 'undefined') {
+                    throw new Error('db.js не загружен!');
+                }
+                
+                console.log('✅ db.js loaded');
+                
+                // Check if PinyinHelper exists
+                if (typeof PinyinHelper === 'undefined') {
+                    throw new Error('pinyin.js не загружен!');
+                }
+                
+                console.log('✅ pinyin.js loaded');
+                
+                // Check IndexedDB support
+                if (!window.indexedDB) {
+                    throw new Error('IndexedDB не поддерживается в этом браузере!');
+                }
+                
+                console.log('✅ IndexedDB supported');
+                
+                // Initialize app
+                console.log('▶️ Calling app.init()...');
+                await app.init();
+                
+            } catch (error) {
+                console.error('❌ Initialization failed:', error.message);
+                console.error('Stack:', error.stack);
+                
+                // Show error in loading screen
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.innerHTML = `
+                        <div style="text-align: center; padding: 20px; max-width: 400px; margin: 0 auto;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                            <h2 style="color: #ff6b6b; margin-bottom: 12px; font-size: 20px;">Ошибка загрузки</h2>
+                            <p style="color: rgba(255,255,255,0.7); margin-bottom: 8px; font-size: 14px;">${error.message}</p>
+                            <details style="margin: 16px 0; text-align: left;">
+                                <summary style="cursor: pointer; color: #00CCFF; font-size: 13px;">Показать детали</summary>
+                                <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto; margin-top: 8px;">${error.stack || 'Нет стека'}</pre>
+                            </details>
+                            <button class="glass-button" onclick="location.reload()" style="margin-top: 12px;">
+                                Перезагрузить
+                            </button>
+                            <button class="glass-button" onclick="clearAllData()" style="margin-top: 8px; background: #ff6b6b;">
+                                Очистить данные
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        });
+        
+        // Clear all data function
+        window.clearAllData = function() {
+            if (confirm('Очистить все данные IndexedDB и перезагрузить?')) {
+                console.log('🗑️ Clearing all data...');
+                
+                // Clear IndexedDB
+                indexedDB.deleteDatabase('ChineseRussianDictionary');
+                
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Unregister service worker
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(reg => reg.unregister());
+                    });
+                }
+                
+                setTimeout(() => {
+                    console.log('✅ Data cleared, reloading...');
+                    location.reload();
+                }, 500);
+            }
+        };
+
+        // Register service worker (optional, won't block app)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('✅ Service Worker registered'))
+                .catch(err => console.log('⚠️ Service Worker registration failed:', err));
+        } else {
+            console.log('⚠️ Service Worker not supported');
+        }
+    </script>
+</body>
+</html>
