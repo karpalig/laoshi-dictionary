@@ -1,0 +1,909 @@
+{
+  "name": "HSK 1",
+  "description": "HSK уровень 1 (150 слов)",
+  "color": "green",
+  "words": [
+    {
+      "chinese": "爱",
+      "pinyin": "a4i",
+      "russian": "любить, affection",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "八",
+      "pinyin": "ba1",
+      "russian": "восемь, 8",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "爸爸",
+      "pinyin": "ba4ba",
+      "russian": "отец, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "杯子",
+      "pinyin": "be1izi",
+      "russian": "чашка, стакан",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "北京",
+      "pinyin": "Be3iji1ng",
+      "russian": "beijing, capital of people's republic of china",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "本",
+      "pinyin": "be3n",
+      "russian": "roots or stems of plants, origin",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "不客气",
+      "pinyin": "bu4ke4qi",
+      "russian": "пожалуйста, невежливый",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "不",
+      "pinyin": "bu4",
+      "russian": "не",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "菜",
+      "pinyin": "ca4i",
+      "russian": "dish, vegetables",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "茶",
+      "pinyin": "cha2",
+      "russian": "чай, cl:杯",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "吃",
+      "pinyin": "chi1",
+      "russian": "есть, to consume",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "出租车",
+      "pinyin": "chu1zu1che1",
+      "russian": "такси, rental car",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "打电话",
+      "pinyin": "da3dia4nhua4",
+      "russian": "делать",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "大",
+      "pinyin": "da4",
+      "russian": "большой, huge",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "的",
+      "pinyin": "de",
+      "russian": "of, ~'s",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "点",
+      "pinyin": "dia3n",
+      "russian": "точка, dot",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "电脑",
+      "pinyin": "dia4nna3o",
+      "russian": "компьютер, cl:臺 台",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "电视",
+      "pinyin": "dia4nshi4",
+      "russian": "телевизор, tv",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "电影",
+      "pinyin": "dia4nyi3ng",
+      "russian": "фильм, кино",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "东西",
+      "pinyin": "do1ngxi",
+      "russian": "вещь, предмет",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "都",
+      "pinyin": "do1u",
+      "russian": "все, оба",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "读",
+      "pinyin": "du2",
+      "russian": "читать, учиться",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "对不起",
+      "pinyin": "dui4buqi3",
+      "russian": "unworthy, to let down",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "多",
+      "pinyin": "duo1",
+      "russian": "много, много",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "多少",
+      "pinyin": "duo1shao",
+      "russian": "сколько, сколько",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "儿子",
+      "pinyin": "e2rzi",
+      "russian": "сын",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "二",
+      "pinyin": "e4r",
+      "russian": "два, 2",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "饭馆",
+      "pinyin": "fa4ngua3n",
+      "russian": "ресторан, cl:家",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "飞机",
+      "pinyin": "fe1iji1",
+      "russian": "самолет, cl:架",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "分钟",
+      "pinyin": "fe1nzho1ng",
+      "russian": "минута",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "高兴",
+      "pinyin": "ga1oxi4ng",
+      "russian": "радостный, веселый",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "个",
+      "pinyin": "ge4",
+      "russian": "variant of 個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "工作",
+      "pinyin": "go1ngzuo4",
+      "russian": "работать, to operate",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "狗",
+      "pinyin": "go3u",
+      "russian": "собака, cl:隻 只",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "汉语",
+      "pinyin": "Ha4nyu3",
+      "russian": "chinese language, cl:門 门",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "好",
+      "pinyin": "ha3o",
+      "russian": "хороший, хорошо",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "喝",
+      "pinyin": "he1",
+      "russian": "пить, my goodness!",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "和",
+      "pinyin": "he2",
+      "russian": "и, together with",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "很",
+      "pinyin": "he3n",
+      "russian": "quite, очень",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "后面",
+      "pinyin": "ho4umian",
+      "russian": "rear, позади",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "回",
+      "pinyin": "hui2",
+      "russian": "to curve, возвращаться",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "会",
+      "pinyin": "hui4",
+      "russian": "уметь, be possible",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "火车站",
+      "pinyin": "huo3che1zha4n",
+      "russian": "train station",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "几",
+      "pinyin": "ji3",
+      "russian": "сколько, сколько",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "家",
+      "pinyin": "jia1",
+      "russian": "дом, семья",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "叫",
+      "pinyin": "jia4o",
+      "russian": "to shout, звать",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "今天",
+      "pinyin": "ji1ntia1n",
+      "russian": "сегодня, в",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "九",
+      "pinyin": "jiu3",
+      "russian": "девять, 9",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "开",
+      "pinyin": "ka1i",
+      "russian": "открывать, to start",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "看",
+      "pinyin": "ka4n",
+      "russian": "смотреть, читать",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "看见",
+      "pinyin": "ka4njia4n",
+      "russian": "смотреть, to catch sight of",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "块",
+      "pinyin": "kua4i",
+      "russian": "lump, chunk",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "来",
+      "pinyin": "la2i",
+      "russian": "приходить, to arrive",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "老师",
+      "pinyin": "la3oshi1",
+      "russian": "учитель, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "了",
+      "pinyin": "le",
+      "russian": "(modal particle intensifying preceding clause)",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "冷",
+      "pinyin": "le3ng",
+      "russian": "холодный",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "里",
+      "pinyin": "li3",
+      "russian": "немного, 500 meters",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "零",
+      "pinyin": "li2ng",
+      "russian": "zero, nought",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "六",
+      "pinyin": "liu4",
+      "russian": "шесть, 6",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "妈妈",
+      "pinyin": "ma1ma",
+      "russian": "mama, мама",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "吗",
+      "pinyin": "ma",
+      "russian": "(question tag)",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "买",
+      "pinyin": "ma3i",
+      "russian": "покупать, to purchase",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "猫",
+      "pinyin": "ma1o",
+      "russian": "кошка, cl:隻 只",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "没",
+      "pinyin": "me2i",
+      "russian": "have not, не",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "没关系",
+      "pinyin": "me2igua1nxi",
+      "russian": "ничего",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "米饭",
+      "pinyin": "mi3fa4n",
+      "russian": "рис",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "明天",
+      "pinyin": "mi2ngtia1n",
+      "russian": "завтра",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "名字",
+      "pinyin": "mi2ngzi",
+      "russian": "имя, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "哪",
+      "pinyin": "na3",
+      "russian": "как, который",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "那",
+      "pinyin": "na4",
+      "russian": "тот, those",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "呢",
+      "pinyin": "ne",
+      "russian": "частица, \"and ...?\")",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "能",
+      "pinyin": "ne2ng",
+      "russian": "мочь, быть",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "你",
+      "pinyin": "ni3",
+      "russian": "ты, as opposed to courteous 您)",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "年",
+      "pinyin": "nia2n",
+      "russian": "год, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "女儿",
+      "pinyin": "nv3e2r",
+      "russian": "дочь",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "朋友",
+      "pinyin": "pe2ngyou",
+      "russian": "друг, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "漂亮",
+      "pinyin": "pia4oliang",
+      "russian": "красивый, красивый",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "苹果",
+      "pinyin": "pi2ngguo3",
+      "russian": "яблоко, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "七",
+      "pinyin": "qi1",
+      "russian": "семь, 7",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "钱",
+      "pinyin": "qia2n",
+      "russian": "coin, деньги",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "前面",
+      "pinyin": "qia2nmia4n",
+      "russian": "ahead, в",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "请",
+      "pinyin": "qi3ng",
+      "russian": "to ask, to invite",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "去",
+      "pinyin": "qu4",
+      "russian": "идти, to cause to go or send",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "热",
+      "pinyin": "re4",
+      "russian": "to warm up, to heat up",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "人",
+      "pinyin": "re2n",
+      "russian": "много, человек",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "认识",
+      "pinyin": "re4nshi",
+      "russian": "знать, узнавать",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "日",
+      "pinyin": "ri4",
+      "russian": "sun, day",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "三",
+      "pinyin": "sa1n",
+      "russian": "три, 3",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "商店",
+      "pinyin": "sha1ngdia4n",
+      "russian": "магазин, магазин",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "上",
+      "pinyin": "sha4ng",
+      "russian": "наверху, верх",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "上午",
+      "pinyin": "sha4ngwu3",
+      "russian": "утро, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "少",
+      "pinyin": "sha3o",
+      "russian": "мало, немного",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "谁",
+      "pinyin": "she2i",
+      "russian": "кто, also pr.",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "什么",
+      "pinyin": "she2nme",
+      "russian": "что, кто",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "十",
+      "pinyin": "shi2",
+      "russian": "десять, 10",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "时候",
+      "pinyin": "shi2hou",
+      "russian": "время, length of time",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "是",
+      "pinyin": "shi4",
+      "russian": "is, are",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "书",
+      "pinyin": "shu1",
+      "russian": "книга, letter",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "水",
+      "pinyin": "shui3",
+      "russian": "вода, river",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "水果",
+      "pinyin": "shui3guo3",
+      "russian": "фрукты, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "睡觉",
+      "pinyin": "shui4jia4o",
+      "russian": "идти, спать",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "说话",
+      "pinyin": "shuo1hua4",
+      "russian": "говорить, говорить",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "四",
+      "pinyin": "si4",
+      "russian": "четыре, 4",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "岁",
+      "pinyin": "sui4",
+      "russian": "счетное слово, год",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "他",
+      "pinyin": "ta1",
+      "russian": "он",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "她",
+      "pinyin": "ta1",
+      "russian": "она",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "太",
+      "pinyin": "ta4i",
+      "russian": "highest, greatest",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "天气",
+      "pinyin": "tia1nqi4",
+      "russian": "погода",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "听",
+      "pinyin": "ti1ng",
+      "russian": "слушать, слышать",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "同学",
+      "pinyin": "to2ngxue2",
+      "russian": "учиться, fellow student",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "喂",
+      "pinyin": "we4i",
+      "russian": "to feed",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "我",
+      "pinyin": "wo3",
+      "russian": "невежливый, я",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "我们",
+      "pinyin": "wo3men",
+      "russian": "мы, мы",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "五",
+      "pinyin": "wu3",
+      "russian": "пять, 5",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "喜欢",
+      "pinyin": "xi3huan",
+      "russian": "любить, нравиться",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "下",
+      "pinyin": "xia4",
+      "russian": "низ, below",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "下午",
+      "pinyin": "xia4wu3",
+      "russian": "день, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "下雨",
+      "pinyin": "xia4yu3",
+      "russian": "идет дождь, rainy",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "先生",
+      "pinyin": "xia1nsheng",
+      "russian": "учитель, husband",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "现在",
+      "pinyin": "xia4nza4i",
+      "russian": "сейчас, в",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "想",
+      "pinyin": "xia3ng",
+      "russian": "думать, быть",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "小",
+      "pinyin": "xia3o",
+      "russian": "маленький, tiny",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "小姐",
+      "pinyin": "xia3ojie",
+      "russian": "ты, мисс",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "些",
+      "pinyin": "xie1",
+      "russian": "несколько, мало",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "写",
+      "pinyin": "xie3",
+      "russian": "писать",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "谢谢",
+      "pinyin": "xie4xie",
+      "russian": "to thank, спасибо",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "星期",
+      "pinyin": "xi1ngqi1",
+      "russian": "неделя, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "学生",
+      "pinyin": "xue2sheng",
+      "russian": "студент, школа",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "学习",
+      "pinyin": "xue2xi2",
+      "russian": "изучать, учиться",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "学校",
+      "pinyin": "xue2xia4o",
+      "russian": "школа, cl:所",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "一",
+      "pinyin": "yi1",
+      "russian": "один, 1",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "衣服",
+      "pinyin": "yi1fu",
+      "russian": "одежда, cl:件",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "医生",
+      "pinyin": "yi1she1ng",
+      "russian": "врач, cl:個 个",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "医院",
+      "pinyin": "yi1yua4n",
+      "russian": "больница, cl:所",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "椅子",
+      "pinyin": "yi3zi",
+      "russian": "стул, cl:把",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "有",
+      "pinyin": "yo3u",
+      "russian": "иметь, there is",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "月",
+      "pinyin": "yue4",
+      "russian": "moon, месяц",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "在",
+      "pinyin": "za4i",
+      "russian": "в, в",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "再见",
+      "pinyin": "za4ijia4n",
+      "russian": "до свидания, see you again later",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "怎么",
+      "pinyin": "ze3nme",
+      "russian": "variant of 怎麼 怎么",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "怎么样",
+      "pinyin": "ze3nmeya4ng",
+      "russian": "как",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "这",
+      "pinyin": "zhe4",
+      "russian": "этот, these",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "中国",
+      "pinyin": "Zho1ngguo2",
+      "russian": "china, middle kingdom",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "中午",
+      "pinyin": "zho1ngwu3",
+      "russian": "полдень, полдень",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "住",
+      "pinyin": "zhu4",
+      "russian": "жить, to dwell",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "桌子",
+      "pinyin": "zhuo1zi",
+      "russian": "стол, стол",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "字",
+      "pinyin": "zi4",
+      "russian": "letter, symbol",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "昨天",
+      "pinyin": "zuo2tia1n",
+      "russian": "вчера",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "坐",
+      "pinyin": "zuo4",
+      "russian": "сидеть, to take a seat",
+      "hskLevel": 1
+    },
+    {
+      "chinese": "做",
+      "pinyin": "zuo4",
+      "russian": "делать, делать",
+      "hskLevel": 1
+    }
+  ],
+  "version": "1.0",
+  "source": "github.com/clem109/hsk-vocabulary"
+}

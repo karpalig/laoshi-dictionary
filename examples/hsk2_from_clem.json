@@ -1,0 +1,909 @@
+{
+  "name": "HSK 2",
+  "description": "HSK уровень 2 (150 слов)",
+  "color": "blue",
+  "words": [
+    {
+      "chinese": "吧",
+      "pinyin": "ba",
+      "russian": "...right?, ...ok?",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "白",
+      "pinyin": "ba2i",
+      "russian": "white, snowy",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "百",
+      "pinyin": "ba3i",
+      "russian": "hundred, numerous",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "帮助",
+      "pinyin": "ba1ngzhu4",
+      "russian": "assistance, aid",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "报纸",
+      "pinyin": "ba4ozhi3",
+      "russian": "newspaper, newsprint",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "比",
+      "pinyin": "bi3",
+      "russian": "to compare, to contrast",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "别",
+      "pinyin": "bie2",
+      "russian": "to leave, to depart",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "长",
+      "pinyin": "cha2ng",
+      "russian": "length, long",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "唱歌",
+      "pinyin": "cha4ngge1",
+      "russian": "to sing a song",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "出",
+      "pinyin": "chu1",
+      "russian": "идти, приходить",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "穿",
+      "pinyin": "chua1n",
+      "russian": "to bore through, to pierce",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "船",
+      "pinyin": "chua2n",
+      "russian": "a boat, vessel",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "次",
+      "pinyin": "ci4",
+      "russian": "next in sequence, second",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "从",
+      "pinyin": "co2ng",
+      "russian": "from, via",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "错",
+      "pinyin": "cuo4",
+      "russian": "mistake, wrong",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "打篮球",
+      "pinyin": "da2la2nqiu2",
+      "russian": "play basketball",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "大家",
+      "pinyin": "da4jia1",
+      "russian": "everyone, в",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "但是",
+      "pinyin": "da4nshi4",
+      "russian": "but, как",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "到",
+      "pinyin": "da4o",
+      "russian": "любить, until",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "得",
+      "pinyin": "de",
+      "russian": "structural particle: used after a verb, linking it to following phrase indicating effect",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "得",
+      "pinyin": "de3i",
+      "russian": "иметь, must",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "弟弟",
+      "pinyin": "di4di",
+      "russian": "ты, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "第一",
+      "pinyin": "di4yi1",
+      "russian": "first, номер",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "懂",
+      "pinyin": "do3ng",
+      "russian": "to understand, знать",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "房间",
+      "pinyin": "fa2ngjia1n",
+      "russian": "room, cl:間 间",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "非常",
+      "pinyin": "fe1icha2ng",
+      "russian": "unusual, extraordinary",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "服务员",
+      "pinyin": "fu2wu4yua2n",
+      "russian": "waiter, waitress",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "高",
+      "pinyin": "ga1o",
+      "russian": "high, tall",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "告诉",
+      "pinyin": "ga4osu",
+      "russian": "to tell, to inform",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "哥哥",
+      "pinyin": "ge1ge",
+      "russian": "older brother, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "给",
+      "pinyin": "ge3i",
+      "russian": "любить, for",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "公共汽车",
+      "pinyin": "go1nggo4ngqi4che1",
+      "russian": "bus, cl:輛 辆",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "公斤",
+      "pinyin": "go1ngji1n",
+      "russian": "kilogram",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "公司",
+      "pinyin": "go1ngsi1",
+      "russian": "company, firm",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "贵",
+      "pinyin": "gui4",
+      "russian": "expensive, noble",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "还",
+      "pinyin": "ha2i",
+      "russian": "still, still in progress",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "孩子",
+      "pinyin": "ha2izi",
+      "russian": "child",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "好吃",
+      "pinyin": "ha3ochi1",
+      "russian": "tasty, delicious",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "号",
+      "pinyin": "ha4o",
+      "russian": "ordinal number, day of a month",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "黑",
+      "pinyin": "he1i",
+      "russian": "black, dark",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "红",
+      "pinyin": "ho2ng",
+      "russian": "red, popular",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "欢迎",
+      "pinyin": "hua1nyi2ng",
+      "russian": "to welcome, мы",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "还",
+      "pinyin": "hua2n",
+      "russian": "to pay back, возвращаться",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "回答",
+      "pinyin": "hui2da2",
+      "russian": "to reply, to answer",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "机场",
+      "pinyin": "ji1cha3ng",
+      "russian": "airport, airfield",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "鸡蛋",
+      "pinyin": "ji1da4n",
+      "russian": "egg, он",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "件",
+      "pinyin": "jia4n",
+      "russian": "item, component",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "教室",
+      "pinyin": "jia4oshi4",
+      "russian": "classroom, cl:間 间",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "姐姐",
+      "pinyin": "jie3jie",
+      "russian": "older sister, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "介绍",
+      "pinyin": "jie4sha4o",
+      "russian": "to introduce, to give a presentation",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "进",
+      "pinyin": "ji4n",
+      "russian": "to advance, to enter",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "近",
+      "pinyin": "ji4n",
+      "russian": "near, close to",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "就",
+      "pinyin": "jiu4",
+      "russian": "в, right away",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "觉得",
+      "pinyin": "jue2de",
+      "russian": "думать, to feel",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "咖啡",
+      "pinyin": "ka1fe1i",
+      "russian": "coffee, cl:杯",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "开始",
+      "pinyin": "ka1ishi3",
+      "russian": "быть, beginning",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "考试",
+      "pinyin": "ka3oshi4",
+      "russian": "to take an exam, exam",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "可能",
+      "pinyin": "ke3ne2ng",
+      "russian": "might, possible",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "可以",
+      "pinyin": "ke3yi3",
+      "russian": "уметь, may",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "课",
+      "pinyin": "ke4",
+      "russian": "subject, course",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "快",
+      "pinyin": "kua4i",
+      "russian": "rapid, quick",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "快乐",
+      "pinyin": "kua4ile4",
+      "russian": "радостный, я",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "累",
+      "pinyin": "le4i",
+      "russian": "tired, мы",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "离",
+      "pinyin": "li2",
+      "russian": "to leave, to part from",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "两",
+      "pinyin": "lia3ng",
+      "russian": "оба, два",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "路",
+      "pinyin": "lu4",
+      "russian": "road, cl:條 条",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "旅游",
+      "pinyin": "lv3yo2u",
+      "russian": "trip, journey",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "卖",
+      "pinyin": "ma4i",
+      "russian": "to sell, быть",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "慢",
+      "pinyin": "ma4n",
+      "russian": "slow",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "忙",
+      "pinyin": "ma2ng",
+      "russian": "busy, hurriedly",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "每",
+      "pinyin": "me3i",
+      "russian": "each, every",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "妹妹",
+      "pinyin": "me4imei",
+      "russian": "ты, fig. younger woman",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "门",
+      "pinyin": "me2n",
+      "russian": "gate, door",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "男人",
+      "pinyin": "na2nre2n",
+      "russian": "a man, a male",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "您",
+      "pinyin": "ni2n",
+      "russian": "ты, as opposed to informal 你)",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "牛奶",
+      "pinyin": "niu2na3i",
+      "russian": "cow's milk, cl:瓶",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "女人",
+      "pinyin": "nv3re2n",
+      "russian": "woman",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "旁边",
+      "pinyin": "pa2ngbia1n",
+      "russian": "lateral, side",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "跑步",
+      "pinyin": "pa3obu4",
+      "russian": "to walk quickly, to march",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "便宜",
+      "pinyin": "pia2nyi",
+      "russian": "маленький, to let sb off lightly",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "票",
+      "pinyin": "pia4o",
+      "russian": "ticket, ballot",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "妻子",
+      "pinyin": "qi1zi",
+      "russian": "wife, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "起床",
+      "pinyin": "qi3chua2ng",
+      "russian": "to get out of bed, to get up",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "千",
+      "pinyin": "qia1n",
+      "russian": "a swing",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "晴",
+      "pinyin": "qi2ng",
+      "russian": "clear, fine",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "去年",
+      "pinyin": "qu4nia2n",
+      "russian": "last year",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "让",
+      "pinyin": "ra4ng",
+      "russian": "to yield, to permit",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "上班",
+      "pinyin": "sha4ngba1n",
+      "russian": "идти, быть",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "身体",
+      "pinyin": "she1nti3",
+      "russian": "body, он",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "生病",
+      "pinyin": "she1ngbi4ng",
+      "russian": "to fall ill",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "生日",
+      "pinyin": "she1ngri4",
+      "russian": "birthday, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "时间",
+      "pinyin": "shi2jia1n",
+      "russian": "время, period",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "事情",
+      "pinyin": "shi4qing",
+      "russian": "affair, matter",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "手表",
+      "pinyin": "sho3ubia3o",
+      "russian": "wrist watch, cl:塊 块",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "手机",
+      "pinyin": "sho3uji1",
+      "russian": "cell phone, mobile phone",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "送",
+      "pinyin": "so4ng",
+      "russian": "to deliver, to carry",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "所以",
+      "pinyin": "suo3yi3",
+      "russian": "therefore, as a result",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "它",
+      "pinyin": "ta1",
+      "russian": "ничего",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "踢",
+      "pinyin": "ti1",
+      "russian": "to kick, to play",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "题",
+      "pinyin": "ti2",
+      "russian": "topic, problem for discussion",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "跳舞",
+      "pinyin": "tia4owu3",
+      "russian": "to dance",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "外",
+      "pinyin": "wa4i",
+      "russian": "outside, в",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "完",
+      "pinyin": "wa2n",
+      "russian": "to finish, быть",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "玩",
+      "pinyin": "wa2n",
+      "russian": "toy, sth used for amusement",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "晚上",
+      "pinyin": "wa3nshang",
+      "russian": "evening, night",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "为",
+      "pinyin": "we4i",
+      "russian": "variant of 為 为, because of",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "问",
+      "pinyin": "we4n",
+      "russian": "to ask",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "问题",
+      "pinyin": "we4nti2",
+      "russian": "вопросительная частица, problem",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "西瓜",
+      "pinyin": "xi1gua1",
+      "russian": "вода, cl:條 条",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "希望",
+      "pinyin": "xi1wa4ng",
+      "russian": "to wish for, to desire",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "洗",
+      "pinyin": "xi3",
+      "russian": "to wash, to bathe",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "向",
+      "pinyin": "xia4ng",
+      "russian": "towards, to face",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "小时",
+      "pinyin": "xia3oshi2",
+      "russian": "hour, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "笑",
+      "pinyin": "xia4o",
+      "russian": "laugh, smile",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "新",
+      "pinyin": "xi1n",
+      "russian": "new, newly",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "姓",
+      "pinyin": "xi4ng",
+      "russian": "семья, surname",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "休息",
+      "pinyin": "xiu1xi",
+      "russian": "ресторан, to rest",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "雪",
+      "pinyin": "xue3",
+      "russian": "snow, snowfall",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "颜色",
+      "pinyin": "ya2nse4",
+      "russian": "color, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "眼睛",
+      "pinyin": "ya3njing",
+      "russian": "eye, cl:隻 只",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "羊肉",
+      "pinyin": "ya2ngro4u",
+      "russian": "mutton",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "药",
+      "pinyin": "ya4o",
+      "russian": "я, drug",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "要",
+      "pinyin": "ya4o",
+      "russian": "important, vital",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "也",
+      "pinyin": "ye3",
+      "russian": "also, слишком",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "已经",
+      "pinyin": "yi3ji1ng",
+      "russian": "already",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "一起",
+      "pinyin": "yi1qi3",
+      "russian": "в, together",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "意思",
+      "pinyin": "yi4si",
+      "russian": "idea, opinion",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "阴",
+      "pinyin": "yi1n",
+      "russian": "overcast, cloudy",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "因为",
+      "pinyin": "yi1nwe4i",
+      "russian": "because, owing to",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "游泳",
+      "pinyin": "yo2uyo3ng",
+      "russian": "swimming, to swim",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "右边",
+      "pinyin": "yo4ubian",
+      "russian": "right side, right",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "鱼",
+      "pinyin": "yu2",
+      "russian": "fish, cl:條 条",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "元",
+      "pinyin": "yua2n",
+      "russian": "chinese monetary unit, dollar",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "远",
+      "pinyin": "yua3n",
+      "russian": "far, distant",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "运动",
+      "pinyin": "yu4ndo4ng",
+      "russian": "to move, to exercise",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "再",
+      "pinyin": "za4i",
+      "russian": "again, наверху",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "早上",
+      "pinyin": "za3oshang",
+      "russian": "early morning, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "张",
+      "pinyin": "zha1ng",
+      "russian": "открывать, to spread",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "长",
+      "pinyin": "zha3ng",
+      "russian": "chief, он",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "丈夫",
+      "pinyin": "zha4ngfu",
+      "russian": "husband, cl:個 个",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "找",
+      "pinyin": "zha3o",
+      "russian": "to try to find, смотреть",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "着",
+      "pinyin": "zhe",
+      "russian": "aspect particle indicating action in progress",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "真",
+      "pinyin": "zhe1n",
+      "russian": "really, truly",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "正在",
+      "pinyin": "zhe4ngza4i",
+      "russian": "в, while",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "知道",
+      "pinyin": "zhi1da4o",
+      "russian": "знать, быть",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "准备",
+      "pinyin": "zhu3nbe4i",
+      "russian": "preparation, to prepare",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "自行车",
+      "pinyin": "zi4xi2ngche1",
+      "russian": "bicycle, bike",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "走",
+      "pinyin": "zo3u",
+      "russian": "to walk, идти",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "最",
+      "pinyin": "zui4",
+      "russian": "most, the most",
+      "hskLevel": 2
+    },
+    {
+      "chinese": "左边",
+      "pinyin": "zuo3bian",
+      "russian": "left, the left side",
+      "hskLevel": 2
+    }
+  ],
+  "version": "1.0",
+  "source": "github.com/clem109/hsk-vocabulary"
+}
