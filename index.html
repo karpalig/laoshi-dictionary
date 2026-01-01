@@ -72,6 +72,17 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Quick load buttons -->
+                    <div style="padding: 0 20px 16px 20px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="glass-button" onclick="app.loadDefaultDictionary()" style="flex: 1; min-width: 140px; font-size: 14px; padding: 10px 16px; background: rgba(34, 197, 94, 0.5);">
+                            📗 HSK 1 (150 слов)
+                        </button>
+                        <button class="glass-button" onclick="app.createSampleData()" style="flex: 1; min-width: 140px; font-size: 14px; padding: 10px 16px; background: rgba(139, 92, 246, 0.5);">
+                            🎯 Примеры (5 слов)
+                        </button>
+                    </div>
+                    
                     <div id="dictionaries-list" class="list-container"></div>
                 </div>
 
