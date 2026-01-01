@@ -1,13 +1,14 @@
 // Service Worker for PWA
-const CACHE_NAME = 'chinese-russian-dict-v1';
+const CACHE_NAME = 'chinese-russian-dict-v2';
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/css/styles.css',
-    '/js/app.js',
-    '/js/db.js',
-    '/js/pinyin.js',
-    '/manifest.json'
+    './',
+    './index.html',
+    './css/styles.css',
+    './js/app.js',
+    './js/db.js',
+    './js/pinyin.js',
+    './manifest.json',
+    './examples/hsk1_basic.json'
 ];
 
 // Install event - cache resources
