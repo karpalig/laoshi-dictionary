@@ -92,9 +92,11 @@ class DatabaseManager {
             const tx = this.db.transaction(storeName, 'readonly');
             const store = tx.objectStore(storeName);
             const index = store.index(indexName);
-            const request = index.getAll(value);
             
-            request.onsuccess = () => resolve(request.result);
+            // If value is provided, use it; otherwise get all
+            const request = value !== undefined ? index.getAll(value) : index.getAll();
+            
+            request.onsuccess = () => resolve(request.result || []);
             request.onerror = () => reject(request.error);
         });
     }
@@ -167,7 +169,8 @@ class DatabaseManager {
     }
 
     async getFavoriteWords() {
-        return await this.getAllByIndex('words', 'isFavorite', true);
+        // Use 1 instead of true for IndexedDB compatibility
+        return await this.getAllByIndex('words', 'isFavorite', 1);
     }
 
     async updateWord(id, updates) {
