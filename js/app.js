@@ -401,6 +401,56 @@ const app = {
         this.renderDictionaries();
     },
 
+    // Load default dictionary (HSK 1)
+    async loadDefaultDictionary() {
+        try {
+            console.log('📥 Loading default HSK 1 dictionary...');
+            
+            // Fetch HSK 1 dictionary
+            const response = await fetch('examples/hsk1_basic.json');
+            if (!response.ok) {
+                throw new Error('Failed to load HSK 1 dictionary');
+            }
+            
+            const data = await response.json();
+            
+            // Create dictionary
+            const dict = await db.createDictionary(
+                data.name,
+                data.description,
+                data.color || 'green'
+            );
+            
+            // Import words
+            let imported = 0;
+            for (const word of data.words || []) {
+                try {
+                    await db.createWord(
+                        word.chinese,
+                        word.pinyin,
+                        word.russian,
+                        dict.id,
+                        word.hskLevel || 0
+                    );
+                    imported++;
+                } catch (e) {
+                    console.error('Error importing word:', word, e);
+                }
+            }
+            
+            await this.loadData();
+            this.renderSearch();
+            this.renderDictionaries();
+            
+            console.log(`✅ Loaded HSK 1: ${imported} words`);
+            alert(`✅ Загружен словарь HSK 1: ${imported} слов`);
+            
+        } catch (error) {
+            console.error('Error loading default dictionary:', error);
+            alert('❌ Ошибка загрузки словаря: ' + error.message);
+        }
+    },
+
     getColorValue(colorName) {
         const colors = {
             'cyan': '#00CCFF',
