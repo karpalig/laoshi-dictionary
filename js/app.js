@@ -408,7 +408,197 @@ const app = {
         this.renderDictionaries();
     },
 
-    // Load default dictionary (HSK 1)
+    // Show dictionary selector modal
+    showDictionarySelector() {
+        const availableDictionaries = [
+            {
+                file: 'examples/hsk1_basic.json',
+                name: '📗 HSK 1 - Базовый',
+                description: '150 слов (русский перевод)',
+                level: 'HSK 1',
+                color: 'green'
+            },
+            {
+                file: 'examples/hsk1_from_clem.json',
+                name: '📗 HSK 1',
+                description: '150 слов (английский)',
+                level: 'HSK 1',
+                color: 'green'
+            },
+            {
+                file: 'examples/hsk2_from_clem.json',
+                name: '📘 HSK 2',
+                description: '150 слов',
+                level: 'HSK 2',
+                color: 'blue'
+            },
+            {
+                file: 'examples/hsk3_from_clem.json',
+                name: '📙 HSK 3',
+                description: '299 слов',
+                level: 'HSK 3',
+                color: 'cyan'
+            },
+            {
+                file: 'examples/hsk4_from_clem.json',
+                name: '📕 HSK 4',
+                description: '601 слово',
+                level: 'HSK 4',
+                color: 'purple'
+            },
+            {
+                file: 'examples/hsk5_from_clem.json',
+                name: '📔 HSK 5',
+                description: '1300 слов',
+                level: 'HSK 5',
+                color: 'pink'
+            },
+            {
+                file: 'examples/hsk6_from_clem.json',
+                name: '📓 HSK 6',
+                description: '2500 слов',
+                level: 'HSK 6',
+                color: 'orange'
+            },
+            {
+                file: 'examples/everyday_chinese.json',
+                name: '💬 Повседневный китайский',
+                description: '50 полезных фраз',
+                level: 'HSK 1-2',
+                color: 'blue'
+            },
+            {
+                file: 'examples/restaurant_food.json',
+                name: '🍜 Ресторан и еда',
+                description: '56 слов (еда, напитки)',
+                level: 'HSK 1-3',
+                color: 'orange'
+            },
+            {
+                file: 'examples/travel_transport.json',
+                name: '✈️ Путешествия',
+                description: '61 слово (транспорт, отели)',
+                level: 'HSK 1-3',
+                color: 'purple'
+            }
+        ];
+
+        const dictionaryCards = availableDictionaries.map(dict => `
+            <div class="glass-card" style="cursor: pointer; margin-bottom: 12px;" onclick="app.loadDictionaryFromFile('${dict.file}')">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <h3 style="margin: 0 0 8px 0; font-size: 18px;">${dict.name}</h3>
+                        <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">${dict.description}</p>
+                        <span style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px;">
+                            ${dict.level}
+                        </span>
+                    </div>
+                    <div style="font-size: 32px;">→</div>
+                </div>
+            </div>
+        `).join('');
+
+        const modalContent = `
+            <div style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                <h2 style="margin: 0 0 16px 0;">Выберите словарь для загрузки</h2>
+                <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
+                    Нажмите на словарь чтобы загрузить его в приложение
+                </p>
+                ${dictionaryCards}
+            </div>
+        `;
+
+        this.showModal(modalContent);
+    },
+
+    // Load dictionary from file
+    async loadDictionaryFromFile(filePath) {
+        this.closeModal();
+        
+        try {
+            console.log(`📥 Загрузка словаря: ${filePath}`);
+            
+            // Try multiple URL patterns
+            const paths = [
+                filePath,
+                `https://raw.githubusercontent.com/karpalig/laoshi-dictionary/main/${filePath}`,
+                `./${filePath}`,
+                `/${filePath}`
+            ];
+            
+            let data = null;
+            let successPath = null;
+            
+            for (const path of paths) {
+                try {
+                    console.log(`Пробую: ${path}`);
+                    const response = await fetch(path);
+                    if (response.ok) {
+                        data = await response.json();
+                        successPath = path;
+                        console.log(`✅ Загружено из: ${path}`);
+                        break;
+                    }
+                } catch (e) {
+                    console.log(`❌ Не удалось: ${path}`);
+                }
+            }
+            
+            if (!data) {
+                throw new Error(`Не удалось загрузить файл: ${filePath}`);
+            }
+            
+            console.log(`📊 Найдено слов: ${data.words?.length || 0}`);
+            
+            // Create dictionary
+            const dict = await db.createDictionary(
+                data.name || 'Новый словарь',
+                data.description || '',
+                data.color || 'blue'
+            );
+            
+            console.log(`📚 Создан словарь: ${dict.name}`);
+            
+            // Import words
+            let imported = 0;
+            let errors = 0;
+            
+            for (const word of data.words || []) {
+                try {
+                    await db.createWord(
+                        word.chinese,
+                        word.pinyin,
+                        word.russian,
+                        dict.id,
+                        word.hskLevel || 0
+                    );
+                    imported++;
+                    
+                    if (imported % 100 === 0) {
+                        console.log(`⏳ Импортировано: ${imported}/${data.words.length}`);
+                    }
+                } catch (e) {
+                    errors++;
+                    if (errors < 5) {
+                        console.error('❌ Ошибка импорта слова:', word, e);
+                    }
+                }
+            }
+            
+            await this.loadData();
+            this.renderSearch();
+            this.renderDictionaries();
+            
+            console.log(`✅ Импорт завершен: ${imported} слов, ошибок: ${errors}`);
+            alert(`✅ Загружен словарь "${data.name}"!\n\n📊 Импортировано: ${imported} слов\n❌ Ошибок: ${errors}`);
+            
+        } catch (error) {
+            console.error('❌ Критическая ошибка загрузки:', error);
+            alert(`❌ Ошибка загрузки словаря:\n\n${error.message}\n\nОткройте консоль (F12) для подробностей.`);
+        }
+    },
+
+    // Load default dictionary (HSK 1) - deprecated, kept for compatibility
     async loadDefaultDictionary() {
         try {
             console.log('📥 Начинаем загрузку HSK 1...');
