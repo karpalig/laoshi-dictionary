@@ -70,7 +70,7 @@ const app = {
                     <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
                     <h2 style="color: #ff6b6b; margin-bottom: 12px;">Ошибка инициализации</h2>
                     <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">${error.message}</p>
-                    <button class="glass-button" onclick="location.reload()">
+                    <button class="button button-large button-fill" onclick="location.reload()">
                         Перезагрузить
                     </button>
                 </div>
@@ -253,10 +253,10 @@ const app = {
 
     getEmptyState(icon, title, subtitle, showButton = false) {
         const buttons = showButton ? `
-            <button class="glass-button" onclick="app.loadDefaultDictionary()" style="margin-bottom: 12px; background: rgba(34, 197, 94, 0.6);">
+            <button class="button button-large button-fill color-green" onclick="app.loadDefaultDictionary()" style="margin-bottom: 12px;">
                 📚 Загрузить HSK 1 (150 слов)
             </button>
-            <button class="glass-button" onclick="app.createSampleData()" style="background: rgba(139, 92, 246, 0.6);">
+            <button class="button button-large button-fill color-purple" onclick="app.createSampleData()">
                 Загрузить примеры (5 слов)
             </button>
         ` : '';
@@ -310,7 +310,7 @@ const app = {
                         `).join('')}
                     </div>
                 </div>
-                <button type="submit" class="glass-button" style="width: 100%; margin-top: 16px;">
+                <button type="submit" class="button button-large button-fill" style="width: 100%; margin-top: 16px;">
                     Создать словарь
                 </button>
             </form>
@@ -420,21 +420,25 @@ const app = {
         
         const examplesHTML = examples.length > 0 
             ? examples.map(ex => `
-                <div class="glass-card" style="margin-bottom: 12px;">
-                    <div style="font-size: 18px; margin-bottom: 8px;" class="chinese">${ex.chineseSentence || ''}</div>
-                    <div style="font-size: 14px; color: rgba(0,204,255,0.8); margin-bottom: 8px;">${ex.pinyinSentence || ''}</div>
-                    <div style="font-size: 16px; color: rgba(255,255,255,0.85);">${ex.russianTranslation || ''}</div>
+                <div class="card" style="margin-bottom: 12px;">
+                    <div class="card-content card-content-padding">
+                        <div style="font-size: 18px; margin-bottom: 8px;" class="chinese">${ex.chineseSentence || ''}</div>
+                        <div style="font-size: 14px; color: rgba(0,204,255,0.8); margin-bottom: 8px;">${ex.pinyinSentence || ''}</div>
+                        <div style="font-size: 16px; color: rgba(255,255,255,0.85);">${ex.russianTranslation || ''}</div>
+                    </div>
                 </div>
             `).join('')
             : '<div style="text-align: center; padding: 32px; color: rgba(255,255,255,0.5);">Нет примеров</div>';
 
         this.showModal('Детали слова', `
-            <div class="glass-card" style="margin-bottom: 24px;">
-                <div style="font-size: 42px; font-weight: 700; margin-bottom: 12px;" class="chinese">${word.chinese || ''}</div>
-                <div style="font-size: 18px; color: rgba(0,204,255,0.9); margin-bottom: 16px;">${word.pinyin || ''}</div>
-                <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 16px 0;"></div>
-                <div style="font-size: 22px; color: rgba(255,255,255,0.95);">${word.russian || ''}</div>
-                ${word.hskLevel > 0 ? `<div class="hsk-badge" style="margin-top: 16px;">HSK ${word.hskLevel}</div>` : ''}
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-content card-content-padding">
+                    <div style="font-size: 42px; font-weight: 700; margin-bottom: 12px;" class="chinese">${word.chinese || ''}</div>
+                    <div style="font-size: 18px; color: rgba(0,204,255,0.9); margin-bottom: 16px;">${word.pinyin || ''}</div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 16px 0;"></div>
+                    <div style="font-size: 22px; color: rgba(255,255,255,0.95);">${word.russian || ''}</div>
+                    ${word.hskLevel > 0 ? `<div class="badge color-blue" style="margin-top: 16px;">HSK ${word.hskLevel}</div>` : ''}
+                </div>
             </div>
             <h3 style="margin-bottom: 12px;">Примеры использования</h3>
             ${examplesHTML}
@@ -450,18 +454,20 @@ const app = {
             : '<div style="text-align: center; padding: 32px; color: rgba(255,255,255,0.5);">Нет слов</div>';
 
         this.showModal(dict.name, `
-            <div class="glass-card" style="margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <div class="dict-icon" style="width: 60px; height: 60px; background-color: ${this.getColorValue(dict.color)};">📚</div>
-                    <div style="flex: 1;">
-                        <h2 style="margin-bottom: 4px;">${dict.name}</h2>
-                        ${dict.description ? `<p style="color: rgba(255,255,255,0.7);">${dict.description}</p>` : ''}
-                        <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 4px;">${words.length} слов</p>
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-content card-content-padding">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background-color: ${this.getColorValue(dict.color)};">📚</div>
+                        <div style="flex: 1;">
+                            <h2 style="margin-bottom: 4px;">${dict.name}</h2>
+                            ${dict.description ? `<p style="color: rgba(255,255,255,0.7);">${dict.description}</p>` : ''}
+                            <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 4px;">${words.length} слов</p>
+                        </div>
                     </div>
                 </div>
             </div>
             <div style="margin-bottom: 16px;">
-                <button class="glass-button" onclick="app.exportDictionary('${dictId}')" style="width: 100%;">
+                <button class="button button-large button-fill" onclick="app.exportDictionary('${dictId}')" style="width: 100%;">
                     📥 Экспортировать словарь
                 </button>
             </div>
@@ -498,7 +504,7 @@ const app = {
                     <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
                         Не удалось найти словари в папке examples. Убедитесь, что файлы существуют.
                     </p>
-                    <button class="glass-button" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
+                    <button class="button button-large button-fill" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
                         Закрыть
                     </button>
                 `;
@@ -510,21 +516,23 @@ const app = {
                 const wordCount = dict.wordCount || 0;
                 const level = dict.level || '';
                 return `
-                    <div class="glass-card" style="cursor: pointer; margin-bottom: 12px;" onclick="app.loadDictionaryFromFile('${dict.file}')">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div style="flex: 1;">
-                                <h3 style="margin: 0 0 8px 0; font-size: 18px;">${dict.name}</h3>
-                                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">${dict.description}</p>
-                                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                                    ${wordCount > 0 ? `<span style="display: inline-block; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px;">
-                                        📊 ${wordCount} ${this.getWordForm(wordCount)}
-                                    </span>` : ''}
-                                    ${level ? `<span style="display: inline-block; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px;">
-                                        ${level}
-                                    </span>` : ''}
+                    <div class="card" style="cursor: pointer; margin-bottom: 12px;" onclick="app.loadDictionaryFromFile('${dict.file}')">
+                        <div class="card-content card-content-padding">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">${dict.name}</h3>
+                                    <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">${dict.description}</p>
+                                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                                        ${wordCount > 0 ? `<span class="badge" style="font-size: 12px;">
+                                            📊 ${wordCount} ${this.getWordForm(wordCount)}
+                                        </span>` : ''}
+                                        ${level ? `<span class="badge color-blue" style="font-size: 12px;">
+                                            ${level}
+                                        </span>` : ''}
+                                    </div>
                                 </div>
+                                <div style="font-size: 32px; margin-left: 16px;">→</div>
                             </div>
-                            <div style="font-size: 32px; margin-left: 16px;">→</div>
                         </div>
                     </div>
                 `;
@@ -551,7 +559,7 @@ const app = {
                 <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
                     ${error.message}
                 </p>
-                <button class="glass-button" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
+                <button class="button button-large button-fill" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
                     Закрыть
                 </button>
             `;
@@ -897,7 +905,7 @@ const app = {
                 <label>Название словаря:</label>
                 <input type="text" id="import-dict-name" placeholder="Импортированный словарь" style="width: 100%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 16px;">
             </div>
-            <button class="glass-button" onclick="app.handleImport()" style="width: 100%; margin-top: 16px;">
+            <button class="button button-large button-fill" onclick="app.handleImport()" style="width: 100%; margin-top: 16px;">
                 Импортировать
             </button>
             <details style="margin-top: 16px; color: rgba(255,255,255,0.7);">

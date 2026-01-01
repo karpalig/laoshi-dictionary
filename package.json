@@ -1,0 +1,11 @@
+{
+  "name": "laoshi-dictionary",
+  "version": "1.0.0",
+  "description": "Chinese-Russian Dictionary PWA",
+  "scripts": {
+    "install-f7": "npm install framework7"
+  },
+  "dependencies": {
+    "framework7": "^8.3.4"
+  }
+}

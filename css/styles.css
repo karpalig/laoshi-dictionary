@@ -131,19 +131,7 @@ body::-webkit-scrollbar {
 }
 
 /* Glass Components */
-.glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 16px;
-    transition: all 0.3s;
-}
-
-.glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
-}
+/* Removed .glass-card - now using Framework7 .card classes */
 
 .glass-input {
     background: var(--glass-bg);
@@ -223,156 +211,16 @@ body::-webkit-scrollbar {
     padding: 0 20px 16px 20px;
 }
 
-.load-dictionary-btn {
-    width: 100%;
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.8) 0%, rgba(16, 185, 129, 0.8) 100%);
-    border: 1px solid rgba(34, 197, 94, 0.5);
-    color: var(--text-primary);
-    padding: 14px 24px;
-    border-radius: 15px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
-    font-family: inherit;
-    outline: none;
-}
-
-.load-dictionary-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%);
-}
-
-.load-dictionary-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
-}
+/* Removed .load-dictionary-btn - now using Framework7 .button classes */
 
 .results-container, .list-container {
     padding: 0 16px;
 }
 
-/* Word Card */
-.word-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 16px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
+/* Removed .word-card, .word-card-header, .word-info, .word-pinyin, .favorite-btn, 
+   .word-translation, .word-meta, .hsk-badge, .meta-text - now using Framework7 .card and .badge classes */
 
-.word-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
-}
-
-.word-card-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.word-info h3 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 6px;
-}
-
-.word-pinyin {
-    font-size: 14px;
-    color: rgba(0, 204, 255, 0.8);
-}
-
-.favorite-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0;
-    transition: transform 0.2s;
-}
-
-.favorite-btn:hover {
-    transform: scale(1.2);
-}
-
-.word-translation {
-    font-size: 18px;
-    color: var(--text-secondary);
-    margin-bottom: 12px;
-}
-
-.word-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.hsk-badge {
-    background: rgba(139, 92, 246, 0.6);
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.meta-text {
-    font-size: 12px;
-    color: var(--text-tertiary);
-}
-
-/* Dictionary Card */
-.dict-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 16px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.dict-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 204, 255, 0.15);
-}
-
-.dict-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    flex-shrink: 0;
-}
-
-.dict-info {
-    flex: 1;
-}
-
-.dict-info h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.dict-description {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-}
+/* Removed .dict-card, .dict-icon, .dict-info, .dict-description - now using Framework7 .card classes */
 
 .dict-count {
     font-size: 12px;
@@ -416,23 +264,9 @@ body::-webkit-scrollbar {
 }
 
 /* Button */
-.glass-button {
-    background: linear-gradient(135deg, rgba(0, 204, 255, 0.8), rgba(0, 204, 255, 0.6));
-    border: 1px solid rgba(0, 204, 255, 0.5);
-    color: var(--text-primary);
-    padding: 12px 24px;
-    border-radius: 15px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 16px rgba(0, 204, 255, 0.3);
-}
+/* Removed .glass-button - now using Framework7 .button classes */
 
-.glass-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 204, 255, 0.4);
-}
+/* Removed .glass-button - now using Framework7 .button classes */
 
 /* Bottom Navigation */
 .bottom-nav {
@@ -693,9 +527,7 @@ body::-webkit-scrollbar {
         padding: 0 12px;
     }
     
-    .word-card {
-        padding: 12px;
-    }
+    /* Removed .word-card responsive styles - now using Framework7 .card classes */
     
     .word-info h3 {
         font-size: 24px;
