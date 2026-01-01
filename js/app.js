@@ -226,7 +226,14 @@ const app = {
     },
 
     getEmptyState(icon, title, subtitle, showButton = false) {
-        const button = showButton ? '<button class="glass-button" onclick="app.createSampleData()">Загрузить примеры</button>' : '';
+        const buttons = showButton ? `
+            <button class="glass-button" onclick="app.loadDefaultDictionary()" style="margin-bottom: 12px; background: rgba(34, 197, 94, 0.6);">
+                📚 Загрузить HSK 1 (150 слов)
+            </button>
+            <button class="glass-button" onclick="app.createSampleData()" style="background: rgba(139, 92, 246, 0.6);">
+                Загрузить примеры (5 слов)
+            </button>
+        ` : '';
         
         return `
             <div class="empty-state">
@@ -235,7 +242,7 @@ const app = {
                 </svg>
                 <h3>${title}</h3>
                 <p>${subtitle}</p>
-                ${button}
+                ${buttons}
             </div>
         `;
     },
@@ -399,6 +406,93 @@ const app = {
         await this.loadData();
         this.renderSearch();
         this.renderDictionaries();
+    },
+
+    // Load default dictionary (HSK 1)
+    async loadDefaultDictionary() {
+        try {
+            console.log('📥 Начинаем загрузку HSK 1...');
+            
+            // Show loading indicator
+            const loadingMsg = alert('⏳ Загрузка HSK 1 словаря...');
+            
+            // Try multiple paths for HSK 1 dictionary
+            const paths = [
+                'https://raw.githubusercontent.com/karpalig/laoshi-dictionary/main/examples/hsk1_basic.json',
+                'examples/hsk1_basic.json',
+                './examples/hsk1_basic.json',
+                '/laoshi-dictionary/examples/hsk1_basic.json'
+            ];
+            
+            let data = null;
+            let successPath = null;
+            
+            for (const path of paths) {
+                try {
+                    console.log(`Пробую загрузить: ${path}`);
+                    const response = await fetch(path);
+                    if (response.ok) {
+                        data = await response.json();
+                        successPath = path;
+                        console.log(`✅ Успешно загружено из: ${path}`);
+                        break;
+                    }
+                } catch (e) {
+                    console.log(`❌ Не удалось загрузить из: ${path}`, e);
+                }
+            }
+            
+            if (!data) {
+                throw new Error('Не удалось найти файл hsk1_basic.json. Проверьте, что файлы загружены на сервер.');
+            }
+            
+            console.log(`📊 Найдено слов: ${data.words?.length || 0}`);
+            
+            // Create dictionary
+            const dict = await db.createDictionary(
+                data.name || 'HSK 1',
+                data.description || 'Базовый уровень',
+                data.color || 'green'
+            );
+            
+            console.log(`📚 Создан словарь: ${dict.name} (ID: ${dict.id})`);
+            
+            // Import words
+            let imported = 0;
+            let errors = 0;
+            
+            for (const word of data.words || []) {
+                try {
+                    await db.createWord(
+                        word.chinese,
+                        word.pinyin,
+                        word.russian,
+                        dict.id,
+                        word.hskLevel || 0
+                    );
+                    imported++;
+                    
+                    // Log progress every 50 words
+                    if (imported % 50 === 0) {
+                        console.log(`⏳ Импортировано: ${imported}/${data.words.length}`);
+                    }
+                } catch (e) {
+                    errors++;
+                    console.error('❌ Ошибка импорта слова:', word, e);
+                }
+            }
+            
+            await this.loadData();
+            this.renderSearch();
+            this.renderDictionaries();
+            
+            console.log(`✅ Импорт завершен: ${imported} слов, ошибок: ${errors}`);
+            alert(`✅ Загружен словарь HSK 1!\n\n📊 Импортировано: ${imported} слов\n❌ Ошибок: ${errors}`);
+            
+        } catch (error) {
+            console.error('❌ Критическая ошибка загрузки:', error);
+            alert(`❌ Ошибка загрузки HSK 1:\n\n${error.message}\n\nОткройте консоль (F12) для подробностей.`);
+        }
     },
 
     getColorValue(colorName) {
