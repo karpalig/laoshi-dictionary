@@ -1,142 +1,314 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Китайско-русский словарь с glass design">
-    <meta name="theme-color" content="#00CCFF">
-    
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    
-    <title>汉俄词典 - Chinese-Russian Dictionary</title>
-    
-    <!-- Framework7 iOS Theme -->
-    <link rel="stylesheet" href="lib/framework7/framework7-bundle.min.css">
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="css/styles.css">
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1a1a2e">
+  
+  <title>老师词典 - Китайско-русский словарь</title>
+  
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
+  <!-- Framework7 CSS (local) -->
+  <link rel="stylesheet" href="node_modules/framework7/framework7-bundle.min.css">
+  <link rel="stylesheet" href="node_modules/framework7-icons/css/framework7-icons.css">
+  
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-    <div id="app">
-        <!-- Loading screen -->
-        <div id="loading-screen" class="loading-screen">
-            <div class="loader"></div>
-            <p>Загрузка словаря...</p>
-        </div>
-
-        <!-- Main app -->
-        <div id="main-app" class="hidden">
-            <!-- Tab content -->
-            <div id="tab-content" class="tab-content">
-                <!-- Search tab -->
-                <div id="search-tab" class="tab-pane active">
-                    <div class="page-header">
-                        <h1>Поиск</h1>
-                    </div>
-                    <div class="search-container">
-                        <div class="search-input-wrapper">
-                            <input type="text" id="search-input" class="search-input" placeholder="汉字, pinyin, русский..." autocomplete="off">
-                            <i class="icon icon-search search-icon"></i>
-                        </div>
-                    </div>
-                    <div id="search-results" class="results-container"></div>
-                </div>
-
-                <!-- Dictionaries tab -->
-                <div id="dictionaries-tab" class="tab-pane">
-                    <div class="page-header">
-                        <h1>Словари</h1>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="icon-button" onclick="app.showImportDialog()" title="Импорт">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <button class="icon-button" onclick="app.exportAllData()" title="Экспорт всех">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <button class="icon-button" onclick="app.showAddDictionary()">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                                    <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick load buttons -->
-                    <div class="quick-load-container">
-                        <button class="button button-large button-fill color-green" onclick="app.showDictionarySelector()">
-                            📚 Загрузить словарь
-                        </button>
-                    </div>
-                    
-                    <div id="dictionaries-list" class="list-container"></div>
-                </div>
-
-                <!-- Favorites tab -->
-                <div id="favorites-tab" class="tab-pane">
-                    <div class="page-header">
-                        <h1>Избранное</h1>
-                    </div>
-                    <div id="favorites-list" class="list-container"></div>
-                </div>
+  <div id="app">
+    <!-- Views/Tabs Container -->
+    <div class="views tabs safe-areas">
+      
+      <!-- Dictionary Tab -->
+      <div id="view-dictionary" class="view view-main tab tab-active">
+        <div class="page page-current page-with-subnavbar" data-name="dictionary">
+          <div class="navbar navbar-large">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">词典 Словарь</div>
             </div>
-
-            <!-- Bottom navigation -->
-            <nav class="bottom-nav">
-                <button class="nav-item active" data-tab="search" onclick="app.switchTab('search')">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <span>Поиск</span>
-                </button>
-                <button class="nav-item" data-tab="dictionaries" onclick="app.switchTab('dictionaries')">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    <span>Словари</span>
-                </button>
-                <button class="nav-item" data-tab="favorites" onclick="app.switchTab('favorites')">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                    </svg>
-                    <span>Избранное</span>
-                </button>
-            </nav>
+            <div class="subnavbar">
+              <form class="searchbar searchbar-init" data-search-container=".search-results" data-search-in=".item-title, .item-subtitle, .item-text">
+                <div class="searchbar-inner">
+                  <div class="searchbar-input-wrap">
+                    <input type="search" placeholder="Поиск: 汉字, pīnyīn, русский..." id="search-input">
+                    <i class="searchbar-icon"></i>
+                    <span class="input-clear-button"></span>
+                  </div>
+                  <span class="searchbar-disable-button">Отмена</span>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <div class="page-content">
+            <!-- Loading indicator -->
+            <div id="dictionary-loading" class="block text-align-center" style="display: none;">
+              <div class="preloader"></div>
+              <p>Загрузка словаря...</p>
+            </div>
+            
+            <!-- Initial load prompt -->
+            <div id="dictionary-init" class="block text-align-center">
+              <div class="block-header">Добро пожаловать!</div>
+              <p>Для работы словаря необходимо загрузить базу данных.</p>
+              <button class="button button-fill button-large" id="btn-load-dictionary">
+                <i class="f7-icons">arrow_down_circle_fill</i>
+                Загрузить словарь
+              </button>
+            </div>
+            
+            <!-- Search results -->
+            <div class="list media-list list-outline-ios list-strong-ios search-results" style="display: none;">
+              <ul id="search-results-list">
+                <!-- Results will be inserted here -->
+              </ul>
+            </div>
+            
+            <!-- Empty search state -->
+            <div id="search-empty" class="block text-align-center" style="display: none;">
+              <i class="f7-icons" style="font-size: 64px; color: var(--f7-theme-color);">search</i>
+              <p>Введите запрос для поиска</p>
+            </div>
+            
+            <!-- No results state -->
+            <div id="search-no-results" class="block text-align-center" style="display: none;">
+              <i class="f7-icons" style="font-size: 64px; color: var(--f7-theme-color);">doc_text_search</i>
+              <p>Ничего не найдено</p>
+            </div>
+          </div>
         </div>
+      </div>
+      
+      <!-- Decks Tab -->
+      <div id="view-decks" class="view tab">
+        <div class="page page-current" data-name="decks">
+          <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">列表 Списки</div>
+              <div class="right">
+                <a href="#" class="link" id="btn-add-deck">
+                  <i class="f7-icons">plus_circle_fill</i>
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="page-content">
+            <!-- System Decks -->
+            <div class="block-title">Системные списки</div>
+            <div class="list list-outline-ios list-strong-ios list-dividers-ios" id="system-decks-list">
+              <ul>
+                <!-- System decks will be inserted here -->
+              </ul>
+            </div>
+            
+            <!-- User Decks -->
+            <div class="block-title">Мои списки</div>
+            <div class="list list-outline-ios list-strong-ios list-dividers-ios" id="user-decks-list">
+              <ul>
+                <li class="item-content" id="no-user-decks">
+                  <div class="item-inner">
+                    <div class="item-title text-color-gray">Нет пользовательских списков</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Settings Tab -->
+      <div id="view-settings" class="view tab">
+        <div class="page page-current" data-name="settings">
+          <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner">
+              <div class="title">设置 Настройки</div>
+            </div>
+          </div>
+          
+          <div class="page-content">
+            <!-- Appearance -->
+            <div class="block-title">Оформление</div>
+            <div class="list list-outline-ios list-strong-ios">
+              <ul>
+                <li>
+                  <div class="item-content">
+                    <div class="item-media">
+                      <i class="f7-icons">moon_fill</i>
+                    </div>
+                    <div class="item-inner">
+                      <div class="item-title">Тёмная тема</div>
+                      <div class="item-after">
+                        <label class="toggle">
+                          <input type="checkbox" id="toggle-dark-mode">
+                          <span class="toggle-icon"></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="block-title">Статистика</div>
+            <div class="list list-outline-ios list-strong-ios">
+              <ul>
+                <li>
+                  <div class="item-content">
+                    <div class="item-media">
+                      <i class="f7-icons">doc_text_fill</i>
+                    </div>
+                    <div class="item-inner">
+                      <div class="item-title">Слов в словаре</div>
+                      <div class="item-after" id="stats-words-count">0</div>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-content">
+                    <div class="item-media">
+                      <i class="f7-icons">square_stack_3d_up_fill</i>
+                    </div>
+                    <div class="item-inner">
+                      <div class="item-title">Списков</div>
+                      <div class="item-after" id="stats-decks-count">0</div>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="item-content">
+                    <div class="item-media">
+                      <i class="f7-icons">externaldrive_fill</i>
+                    </div>
+                    <div class="item-inner">
+                      <div class="item-title">Размер БД</div>
+                      <div class="item-after" id="stats-db-size">—</div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            
+            <!-- About -->
+            <div class="block-title">О приложении</div>
+            <div class="block block-strong-ios block-outline-ios">
+              <p><strong>老师词典</strong> — Китайско-русский словарь</p>
+              <p>Версия 1.0.0</p>
+              <p>База: БКРС Light</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
     </div>
+    
+    <!-- Tabbar -->
+    <div class="toolbar toolbar-bottom tabbar tabbar-icons">
+      <div class="toolbar-inner">
+        <a href="#view-dictionary" class="tab-link tab-link-active">
+          <i class="f7-icons">book_fill</i>
+          <span class="tabbar-label">Словарь</span>
+        </a>
+        <a href="#view-decks" class="tab-link">
+          <i class="f7-icons">square_stack_3d_up_fill</i>
+          <span class="tabbar-label">Списки</span>
+        </a>
+        <a href="#view-settings" class="tab-link">
+          <i class="f7-icons">gear_alt_fill</i>
+          <span class="tabbar-label">Настройки</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Deck Words Popup -->
+  <div class="popup" id="popup-deck-words">
+    <div class="view">
+      <div class="page page-current">
+        <div class="navbar">
+          <div class="navbar-bg"></div>
+          <div class="navbar-inner">
+            <div class="left">
+              <a href="#" class="link popup-close">
+                <i class="f7-icons">chevron_left</i>
+                <span>Назад</span>
+              </a>
+            </div>
+            <div class="title" id="popup-deck-title">Список</div>
+          </div>
+        </div>
+        <div class="page-content">
+          <div class="list media-list list-outline-ios list-strong-ios virtual-list" id="deck-words-list">
+            <!-- Virtual list content -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add Deck Popup -->
+  <div class="popup" id="popup-add-deck">
+    <div class="view">
+      <div class="page page-current">
+        <div class="navbar">
+          <div class="navbar-bg"></div>
+          <div class="navbar-inner">
+            <div class="left">
+              <a href="#" class="link popup-close">Отмена</a>
+            </div>
+            <div class="title">Новый список</div>
+            <div class="right">
+              <a href="#" class="link" id="btn-save-deck">Сохранить</a>
+            </div>
+          </div>
+        </div>
+        <div class="page-content">
+          <div class="list list-outline-ios list-strong-ios">
+            <ul>
+              <li class="item-content item-input">
+                <div class="item-inner">
+                  <div class="item-title item-label">Название</div>
+                  <div class="item-input-wrap">
+                    <input type="text" id="input-deck-name" placeholder="Мой список">
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Modal container -->
-    <div id="modal-container"></div>
-
-    <!-- Scripts -->
-    <script src="lib/framework7/framework7-bundle.min.js"></script>
-    <script src="js/pinyin.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/app.js"></script>
-    <script>
-        // Initialize app
-        window.addEventListener('DOMContentLoaded', () => {
-            app.init();
-        });
-
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker registered'))
-                .catch(err => console.log('Service Worker registration failed'));
-        }
-    </script>
+  <!-- Framework7 JS (local) -->
+  <script src="node_modules/framework7/framework7-bundle.min.js"></script>
+  
+  <!-- idb Library (local) -->
+  <script src="node_modules/idb/build/umd.js"></script>
+  
+  <!-- App JS -->
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.error('SW registration failed:', err));
+    }
+  </script>
 </body>
 </html>
+

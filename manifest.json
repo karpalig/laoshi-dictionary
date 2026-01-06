@@ -1,12 +1,12 @@
 {
-  "name": "汉俄词典 - Chinese-Russian Dictionary",
-  "short_name": "汉俄词典",
-  "description": "Китайско-русский словарь с glass design",
+  "name": "老师词典 - Китайско-русский словарь",
+  "short_name": "老师词典",
+  "description": "Китайско-русский словарь на базе БКРС с поддержкой HSK списков",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0D0D1A",
-  "theme_color": "#00CCFF",
-  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "icon-192.png",
@@ -15,15 +15,12 @@
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
     }
   ],
-  "categories": ["education", "productivity"],
-  "lang": "ru",
-  "dir": "ltr",
-  "scope": "/",
-  "screenshots": []
+  "categories": ["education", "utilities"],
+  "lang": "ru"
 }
+

@@ -1,1102 +1,492 @@
-// Framework7 App Instance
-let f7App = null;
+/**
+ * 老师词典 - Main Application
+ * Framework7 initialization and UI logic
+ */
 
-// Main Application Controller
-const app = {
-    currentTab: 'search',
-    dictionaries: [],
-    words: [],
-    searchResults: [],
-    favoriteWords: [],
-    f7: null, // Framework7 instance
+// #region agent log
+fetch('http://127.0.0.1:7243/ingest/45da4037-6012-4729-a16c-95ef8335a1bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:1',message:'Script loaded, before F7 init',data:{f7Exists:typeof Framework7,tabbarEl:!!document.querySelector('.tabbar')},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+// #endregion
 
-    async init() {
-        try {
-            console.log('🚀 Starting app initialization...');
-            
-            // Initialize Framework7
-            if (typeof Framework7 !== 'undefined') {
-                f7App = new Framework7({
-                    el: '#app',
-                    theme: 'ios',
-                    darkMode: 'auto',
-                    colors: {
-                        primary: '#00CCFF',
-                    },
-                });
-                this.f7 = f7App;
-                console.log('✅ Framework7 initialized');
-            }
-            
-            // Initialize database with timeout
-            console.log('📦 Initializing database...');
-            const dbTimeout = setTimeout(() => {
-                console.error('⏰ Database initialization timeout!');
-            }, 5000);
-            
-            await db.init();
-            clearTimeout(dbTimeout);
-            console.log('✅ Database initialized');
-            
-            // Load initial data
-            console.log('📥 Loading data...');
-            await this.loadData();
-            console.log('✅ Data loaded:', {
-                dictionaries: this.dictionaries.length,
-                words: this.words.length
-            });
-            
-            // Setup event listeners
-            console.log('🎯 Setting up event listeners...');
-            this.setupEventListeners();
-            console.log('✅ Event listeners ready');
-            
-            // Hide loading, show app
-            console.log('🎨 Rendering UI...');
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            
-            // Render initial view
-            this.renderSearch();
-            console.log('✅ App initialized successfully!');
-        } catch (error) {
-            console.error('❌ App initialization failed:', error);
-            console.error('Error stack:', error.stack);
-            
-            // Show error in UI
-            const loadingScreen = document.getElementById('loading-screen');
-            loadingScreen.innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                    <h2 style="color: #ff6b6b; margin-bottom: 12px;">Ошибка инициализации</h2>
-                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">${error.message}</p>
-                    <button class="button button-large button-fill" onclick="location.reload()">
-                        Перезагрузить
-                    </button>
-                </div>
-            `;
-        }
-    },
-
-    async loadData() {
-        this.dictionaries = await db.getAllDictionaries();
-        this.words = await db.getAllWords();
-        this.favoriteWords = await db.getFavoriteWords();
-    },
-
-    setupEventListeners() {
-        const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', (e) => {
-            this.handleSearch(e.target.value);
-        });
-    },
-
-    // Tab switching
-    switchTab(tabName) {
-        this.currentTab = tabName;
-        
-        // Update nav items
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.dataset.tab === tabName) {
-                item.classList.add('active');
-            }
-        });
-        
-        // Update tab panes
-        document.querySelectorAll('.tab-pane').forEach(pane => {
-            pane.classList.remove('active');
-        });
-        document.getElementById(`${tabName}-tab`).classList.add('active');
-        
-        // Render content
-        switch (tabName) {
-            case 'search':
-                this.renderSearch();
-                break;
-            case 'dictionaries':
-                this.renderDictionaries();
-                break;
-            case 'favorites':
-                this.renderFavorites();
-                break;
-        }
-    },
-
-    // Search functionality
-    handleSearch(query) {
-        if (!query.trim()) {
-            this.searchResults = [];
-            this.renderSearch();
-            return;
-        }
-
-        const normalizedQuery = PinyinHelper.normalizeForSearch(query);
-        
-        this.searchResults = this.words.filter(word => {
-            const normalizedChinese = word.chinese.toLowerCase();
-            const normalizedPinyin = PinyinHelper.normalizeForSearch(word.pinyin);
-            const normalizedRussian = word.russian.toLowerCase();
-            
-            return normalizedChinese.includes(normalizedQuery) ||
-                   normalizedPinyin.includes(normalizedQuery) ||
-                   normalizedRussian.includes(normalizedQuery);
-        });
-        
-        this.renderSearch();
-    },
-
-    // Render functions
-    renderSearch() {
-        const container = document.getElementById('search-results');
-        const query = document.getElementById('search-input').value;
-        const words = query ? this.searchResults : this.words.slice(0, 10);
-
-        if (words.length === 0) {
-            if (query) {
-                container.innerHTML = this.getEmptyState('search_off', 'Ничего не найдено', 'Попробуйте другой запрос');
-            } else {
-                container.innerHTML = this.getEmptyState('book_outlined', 'Словарь пуст', 'Добавьте слова в словарь', true);
-            }
-            return;
-        }
-
-        const title = query ? `Результаты поиска (${words.length})` : 'Недавние слова';
-        
-        container.innerHTML = `
-            <div class="results-header" style="padding: 10px 0; font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.9);">
-                ${title}
-            </div>
-            ${words.map(word => this.createWordCard(word)).join('')}
-        `;
-    },
-
-    renderDictionaries() {
-        const container = document.getElementById('dictionaries-list');
-        
-        if (this.dictionaries.length === 0) {
-            container.innerHTML = this.getEmptyState('book', 'Нет словарей', 'Создайте свой первый словарь');
-            return;
-        }
-
-        container.innerHTML = this.dictionaries.map(dict => this.createDictionaryCard(dict)).join('');
-    },
-
-    async renderFavorites() {
-        this.favoriteWords = await db.getFavoriteWords();
-        const container = document.getElementById('favorites-list');
-        
-        if (this.favoriteWords.length === 0) {
-            container.innerHTML = this.getEmptyState('star_border', 'Нет избранных слов', 'Добавьте слова в избранное');
-            return;
-        }
-
-        container.innerHTML = this.favoriteWords.map(word => this.createWordCard(word)).join('');
-    },
-
-    // Card creators
-    createWordCard(word) {
-        if (!word) return '';
-        
-        const dict = this.dictionaries.find(d => d.id === word.dictionaryId);
-        const hskBadge = word.hskLevel > 0 ? `<span class="badge color-blue">HSK ${word.hskLevel}</span>` : '';
-        const dictName = dict ? `<span class="text-color-gray" style="font-size: 12px;">${dict.name || ''}</span>` : '';
-        const favoriteIcon = word.isFavorite ? '⭐' : '☆';
-
-        return `
-            <div class="card" onclick="app.showWordDetail('${word.id}')" style="cursor: pointer;">
-                <div class="card-content card-content-padding">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                        <div style="flex: 1;">
-                            <h3 class="chinese" style="margin: 0 0 6px 0; font-size: 28px; font-weight: 700;">${word.chinese || ''}</h3>
-                            <div class="text-color-blue" style="font-size: 14px;">${word.pinyin || ''}</div>
-                        </div>
-                        <button class="button button-small" onclick="event.stopPropagation(); app.toggleFavorite('${word.id}')" style="min-width: auto; padding: 4px 8px;">
-                            ${favoriteIcon}
-                        </button>
-                    </div>
-                    <div style="font-size: 18px; color: rgba(255,255,255,0.9); margin-bottom: 12px;">${word.russian || ''}</div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        ${hskBadge}
-                        ${dictName}
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    createDictionaryCard(dict) {
-        const wordsCount = this.words.filter(w => w.dictionaryId === dict.id).length;
-        const activeIcon = dict.isActive ? '✓' : '○';
-        const colorStyle = `background-color: ${this.getColorValue(dict.color)}`;
-
-        return `
-            <div class="card" onclick="app.showDictionaryDetail('${dict.id}')" style="cursor: pointer;">
-                <div class="card-content card-content-padding">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; ${colorStyle}">
-                            📚
-                        </div>
-                        <div style="flex: 1;">
-                            <h3 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600;">${dict.name}</h3>
-                            ${dict.description ? `<div class="text-color-gray" style="font-size: 14px; margin-bottom: 4px;">${dict.description}</div>` : ''}
-                            <div class="text-color-gray" style="font-size: 12px;">${wordsCount} слов</div>
-                        </div>
-                        <button class="button button-small" onclick="event.stopPropagation(); app.toggleDictionaryActive('${dict.id}')" style="min-width: auto; padding: 4px 8px;">
-                            ${activeIcon}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    getEmptyState(icon, title, subtitle, showButton = false) {
-        const buttons = showButton ? `
-            <button class="button button-large button-fill color-green" onclick="app.loadDefaultDictionary()" style="margin-bottom: 12px;">
-                📚 Загрузить HSK 1 (150 слов)
-            </button>
-            <button class="button button-large button-fill color-purple" onclick="app.createSampleData()">
-                Загрузить примеры (5 слов)
-            </button>
-        ` : '';
-        
-        return `
-            <div class="empty-state">
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    ${this.getIconPath(icon)}
-                </svg>
-                <h3>${title}</h3>
-                <p>${subtitle}</p>
-                ${buttons}
-            </div>
-        `;
-    },
-
-    getIconPath(name) {
-        const icons = {
-            'search_off': '<path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4-4"/>',
-            'book_outlined': '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/>',
-            'book': '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/>',
-            'star_border': '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>'
-        };
-        return icons[name] || '';
-    },
-
-    // Modals and forms
-    showAddDictionary() {
-        this.showModal('Новый словарь', this.getAddDictionaryForm());
-    },
-
-    getAddDictionaryForm() {
-        return `
-            <form onsubmit="event.preventDefault(); app.handleAddDictionary();" id="dict-form">
-                <div class="form-group">
-                    <label>Название словаря</label>
-                    <input type="text" id="dict-name" required>
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="dict-description"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Цвет</label>
-                    <div class="color-picker">
-                        ${['cyan', 'blue', 'purple', 'pink', 'green', 'orange'].map(color => `
-                            <div class="color-option ${color === 'cyan' ? 'selected' : ''}" 
-                                 data-color="${color}" 
-                                 style="background-color: ${this.getColorValue(color)}"
-                                 onclick="app.selectColor('${color}')"></div>
-                        `).join('')}
-                    </div>
-                </div>
-                <button type="submit" class="button button-large button-fill" style="width: 100%; margin-top: 16px;">
-                    Создать словарь
-                </button>
-            </form>
-        `;
-    },
-
-    async handleAddDictionary() {
-        const name = document.getElementById('dict-name').value;
-        const description = document.getElementById('dict-description').value;
-        const color = document.querySelector('.color-option.selected').dataset.color;
-
-        await db.createDictionary(name, description, color);
-        await this.loadData();
-        this.renderDictionaries();
-        this.closeModal();
-    },
-
-    selectColor(color) {
-        document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
-        document.querySelector(`.color-option[data-color="${color}"]`).classList.add('selected');
-    },
-
-    showModal(title, content) {
-        // Use Framework7 Popup if available, otherwise fallback to custom modal
-        if (this.f7) {
-            const popupHTML = `
-                <div class="popup">
-                    <div class="view">
-                        <div class="page">
-                            <div class="navbar">
-                                <div class="navbar-bg"></div>
-                                <div class="navbar-inner">
-                                    <div class="title">${title}</div>
-                                    <div class="right">
-                                        <a class="link popup-close">
-                                            <i class="icon f7-icons">xmark</i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="page-content">
-                                ${content}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            this.f7.popup.create({
-                content: popupHTML,
-                closeByBackdropClick: true,
-            }).open();
-        } else {
-            // Fallback to custom modal
-            const modalHTML = `
-                <div class="modal-overlay" onclick="if(event.target === this) app.closeModal()">
-                    <div class="modal">
-                        <div class="modal-header">
-                            <h2>${title}</h2>
-                            <button class="close-button" onclick="app.closeModal()">&times;</button>
-                        </div>
-                        ${content}
-                    </div>
-                </div>
-            `;
-            document.getElementById('modal-container').innerHTML = modalHTML;
-        }
-    },
-
-    closeModal() {
-        if (this.f7) {
-            this.f7.popup.close();
-        } else {
-            document.getElementById('modal-container').innerHTML = '';
-        }
-    },
-
-    // Actions
-    async toggleFavorite(wordId) {
-        await db.toggleFavorite(wordId);
-        await this.loadData();
-        
-        // Re-render current view
-        if (this.currentTab === 'search') {
-            this.renderSearch();
-        } else if (this.currentTab === 'favorites') {
-            this.renderFavorites();
-        }
-    },
-
-    async toggleDictionaryActive(dictId) {
-        const dict = await db.get('dictionaries', dictId);
-        await db.updateDictionary(dictId, { isActive: !dict.isActive });
-        await this.loadData();
-        this.renderDictionaries();
-    },
-
-    async showWordDetail(wordId) {
-        const word = await db.get('words', wordId);
-        
-        if (!word) {
-            alert('Слово не найдено');
-            return;
-        }
-        
-        const examples = await db.getExamplesByWord(wordId);
-        
-        const examplesHTML = examples.length > 0 
-            ? examples.map(ex => `
-                <div class="card" style="margin-bottom: 12px;">
-                    <div class="card-content card-content-padding">
-                        <div style="font-size: 18px; margin-bottom: 8px;" class="chinese">${ex.chineseSentence || ''}</div>
-                        <div style="font-size: 14px; color: rgba(0,204,255,0.8); margin-bottom: 8px;">${ex.pinyinSentence || ''}</div>
-                        <div style="font-size: 16px; color: rgba(255,255,255,0.85);">${ex.russianTranslation || ''}</div>
-                    </div>
-                </div>
-            `).join('')
-            : '<div style="text-align: center; padding: 32px; color: rgba(255,255,255,0.5);">Нет примеров</div>';
-
-        this.showModal('Детали слова', `
-            <div class="card" style="margin-bottom: 24px;">
-                <div class="card-content card-content-padding">
-                    <div style="font-size: 42px; font-weight: 700; margin-bottom: 12px;" class="chinese">${word.chinese || ''}</div>
-                    <div style="font-size: 18px; color: rgba(0,204,255,0.9); margin-bottom: 16px;">${word.pinyin || ''}</div>
-                    <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 16px 0;"></div>
-                    <div style="font-size: 22px; color: rgba(255,255,255,0.95);">${word.russian || ''}</div>
-                    ${word.hskLevel > 0 ? `<div class="badge color-blue" style="margin-top: 16px;">HSK ${word.hskLevel}</div>` : ''}
-                </div>
-            </div>
-            <h3 style="margin-bottom: 12px;">Примеры использования</h3>
-            ${examplesHTML}
-        `);
-    },
-
-    async showDictionaryDetail(dictId) {
-        const dict = await db.get('dictionaries', dictId);
-        const words = await db.getWordsByDictionary(dictId);
-        
-        const wordsHTML = words.length > 0
-            ? words.map(word => this.createWordCard(word)).join('')
-            : '<div style="text-align: center; padding: 32px; color: rgba(255,255,255,0.5);">Нет слов</div>';
-
-        this.showModal(dict.name, `
-            <div class="card" style="margin-bottom: 16px;">
-                <div class="card-content card-content-padding">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background-color: ${this.getColorValue(dict.color)};">📚</div>
-                        <div style="flex: 1;">
-                            <h2 style="margin-bottom: 4px;">${dict.name}</h2>
-                            ${dict.description ? `<p style="color: rgba(255,255,255,0.7);">${dict.description}</p>` : ''}
-                            <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 4px;">${words.length} слов</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div style="margin-bottom: 16px;">
-                <button class="button button-large button-fill" onclick="app.exportDictionary('${dictId}')" style="width: 100%;">
-                    📥 Экспортировать словарь
-                </button>
-            </div>
-            ${wordsHTML}
-        `);
-    },
-
-    async createSampleData() {
-        await db.createSampleData();
-        await this.loadData();
-        this.renderSearch();
-        this.renderDictionaries();
-    },
-
-    // Show dictionary selector modal
-    async showDictionarySelector() {
-        // Show loading state
-        const loadingContent = `
-            <div style="text-align: center; padding: 40px;">
-                <div class="loader" style="margin: 0 auto;"></div>
-                <p style="margin-top: 20px; color: rgba(255,255,255,0.7);">
-                    Сканирование папки examples...
-                </p>
-            </div>
-        `;
-        this.showModal('Поиск словарей...', loadingContent);
-
-        try {
-            // Get all JSON files from examples folder
-            const discoveredDictionaries = await this.discoverDictionaries();
-            
-            if (discoveredDictionaries.length === 0) {
-                const errorContent = `
-                    <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
-                        Не удалось найти словари в папке examples. Убедитесь, что файлы существуют.
-                    </p>
-                    <button class="button button-large button-fill" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
-                        Закрыть
-                    </button>
-                `;
-                this.showModal('Словари не найдены', errorContent);
-                return;
-            }
-
-            const dictionaryCards = discoveredDictionaries.map(dict => {
-                const wordCount = dict.wordCount || 0;
-                const level = dict.level || '';
-                return `
-                    <div class="card" style="cursor: pointer; margin-bottom: 12px;" onclick="app.loadDictionaryFromFile('${dict.file}')">
-                        <div class="card-content card-content-padding">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">${dict.name}</h3>
-                                    <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">${dict.description}</p>
-                                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                                        ${wordCount > 0 ? `<span class="badge" style="font-size: 12px;">
-                                            📊 ${wordCount} ${this.getWordForm(wordCount)}
-                                        </span>` : ''}
-                                        ${level ? `<span class="badge color-blue" style="font-size: 12px;">
-                                            ${level}
-                                        </span>` : ''}
-                                    </div>
-                                </div>
-                                <div style="font-size: 32px; margin-left: 16px;">→</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            const modalContent = `
-                <div style="max-height: 70vh; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none;">
-                    <style>
-                        div[style*="overflow-y: auto"]::-webkit-scrollbar {
-                            display: none;
-                        }
-                    </style>
-                    <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
-                        Найдено словарей: ${discoveredDictionaries.length}
-                    </p>
-                    ${dictionaryCards}
-                </div>
-            `;
-
-            this.showModal('Выберите словарь для загрузки', modalContent);
-        } catch (error) {
-            console.error('Ошибка при поиске словарей:', error);
-            const errorContent = `
-                <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.7);">
-                    ${error.message}
-                </p>
-                <button class="button button-large button-fill" onclick="app.closeModal()" style="width: 100%; margin-top: 20px;">
-                    Закрыть
-                </button>
-            `;
-            this.showModal('Ошибка', errorContent);
-        }
-    },
-
-    // Helper function to get correct word form in Russian
-    getWordForm(count) {
-        const lastDigit = count % 10;
-        const lastTwoDigits = count % 100;
-        
-        if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-            return 'слов';
-        }
-        if (lastDigit === 1) {
-            return 'слово';
-        }
-        if (lastDigit >= 2 && lastDigit <= 4) {
-            return 'слова';
-        }
-        return 'слов';
-    },
-
-    // Discover all dictionaries in examples folder
-    async discoverDictionaries() {
-        const discovered = [];
-        const paths = ['', './', '/'];
-        
-        // First, try to fetch an index file if it exists
-        let indexFiles = null;
-        for (const basePath of paths) {
-            try {
-                const indexUrl = basePath + 'examples/index.json';
-                const response = await fetch(indexUrl);
-                if (response.ok) {
-                    indexFiles = await response.json();
-                    console.log('✅ Найден индексный файл со словарями');
-                    break;
-                }
-            } catch (e) {
-                // Index file doesn't exist, continue
-            }
-        }
-        
-        // If index file exists, use it
-        if (indexFiles && Array.isArray(indexFiles.dictionaries)) {
-            for (const dictInfo of indexFiles.dictionaries) {
-                for (const basePath of paths) {
-                    try {
-                        const url = basePath + dictInfo.file;
-                        const response = await fetch(url);
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            
-                            if (data && typeof data === 'object' && data.words && Array.isArray(data.words)) {
-                                discovered.push({
-                                    file: url,
-                                    name: data.name || dictInfo.name || dictInfo.file.split('/').pop().replace('.json', ''),
-                                    description: data.description || dictInfo.description || `${data.words.length} слов`,
-                                    color: data.color || dictInfo.color || 'blue',
-                                    wordCount: data.words.length,
-                                    level: dictInfo.level || this.extractLevelFromFilename(dictInfo.file)
-                                });
-                                break;
-                            }
-                        }
-                    } catch (e) {
-                        continue;
-                    }
-                }
-            }
-        } else {
-            // Fallback: try to discover dictionaries by attempting to fetch known files
-            // This list can be extended, but ideally use index.json
-            const potentialFiles = [
-                'examples/hsk1_basic.json',
-                'examples/hsk1_from_clem.json',
-                'examples/hsk2_from_clem.json',
-                'examples/hsk3_from_clem.json',
-                'examples/hsk4_from_clem.json',
-                'examples/hsk5_from_clem.json',
-                'examples/hsk6_from_clem.json',
-                'examples/everyday_chinese.json',
-                'examples/restaurant_food.json',
-                'examples/travel_transport.json',
-                'examples/sample_dictionary.json'
-            ];
-
-            // Try to discover dictionaries by attempting to fetch them
-            for (const file of potentialFiles) {
-                for (const basePath of paths) {
-                    try {
-                        const url = basePath + file;
-                        const response = await fetch(url);
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            
-                            // Validate that it's a dictionary file
-                            if (data && typeof data === 'object' && data.words && Array.isArray(data.words)) {
-                                discovered.push({
-                                    file: url,
-                                    name: data.name || file.split('/').pop().replace('.json', ''),
-                                    description: data.description || `${data.words.length} слов`,
-                                    color: data.color || 'blue',
-                                    wordCount: data.words.length,
-                                    level: this.extractLevelFromFilename(file)
-                                });
-                                
-                                console.log(`✅ Найден словарь: ${data.name} (${data.words.length} слов)`);
-                                break; // Found this file, no need to try other paths
-                            }
-                        }
-                    } catch (e) {
-                        // File doesn't exist or can't be read, continue
-                        continue;
-                    }
-                }
-            }
-        }
-
-        // Sort by name
-        discovered.sort((a, b) => a.name.localeCompare(b.name));
-        
-        return discovered;
-    },
-
-    // Extract HSK level from filename
-    extractLevelFromFilename(filename) {
-        if (filename.includes('hsk1')) return 'HSK 1';
-        if (filename.includes('hsk2')) return 'HSK 2';
-        if (filename.includes('hsk3')) return 'HSK 3';
-        if (filename.includes('hsk4')) return 'HSK 4';
-        if (filename.includes('hsk5')) return 'HSK 5';
-        if (filename.includes('hsk6')) return 'HSK 6';
-        return '';
-    },
-
-    // Load dictionary from file
-    async loadDictionaryFromFile(filePath) {
-        this.closeModal();
-        
-        try {
-            console.log(`📥 Загрузка словаря: ${filePath}`);
-            
-            // Try multiple URL patterns
-            const paths = [
-                filePath,
-                `https://raw.githubusercontent.com/karpalig/laoshi-dictionary/main/${filePath}`,
-                `./${filePath}`,
-                `/${filePath}`
-            ];
-            
-            let data = null;
-            let successPath = null;
-            
-            for (const path of paths) {
-                try {
-                    console.log(`Пробую: ${path}`);
-                    const response = await fetch(path);
-                    if (response.ok) {
-                        data = await response.json();
-                        successPath = path;
-                        console.log(`✅ Загружено из: ${path}`);
-                        break;
-                    }
-                } catch (e) {
-                    console.log(`❌ Не удалось: ${path}`);
-                }
-            }
-            
-            if (!data) {
-                throw new Error(`Не удалось загрузить файл: ${filePath}`);
-            }
-            
-            console.log(`📊 Найдено слов: ${data.words?.length || 0}`);
-            
-            // Create dictionary
-            const dict = await db.createDictionary(
-                data.name || 'Новый словарь',
-                data.description || '',
-                data.color || 'blue'
-            );
-            
-            console.log(`📚 Создан словарь: ${dict.name}`);
-            
-            // Import words
-            let imported = 0;
-            let errors = 0;
-            
-            for (const word of data.words || []) {
-                try {
-                    await db.createWord(
-                        word.chinese,
-                        word.pinyin,
-                        word.russian,
-                        dict.id,
-                        word.hskLevel || 0
-                    );
-                    imported++;
-                    
-                    if (imported % 100 === 0) {
-                        console.log(`⏳ Импортировано: ${imported}/${data.words.length}`);
-                    }
-                } catch (e) {
-                    errors++;
-                    if (errors < 5) {
-                        console.error('❌ Ошибка импорта слова:', word, e);
-                    }
-                }
-            }
-            
-            await this.loadData();
-            this.renderSearch();
-            this.renderDictionaries();
-            
-            console.log(`✅ Импорт завершен: ${imported} слов, ошибок: ${errors}`);
-            alert(`✅ Загружен словарь "${data.name}"!\n\n📊 Импортировано: ${imported} слов\n❌ Ошибок: ${errors}`);
-            
-        } catch (error) {
-            console.error('❌ Критическая ошибка загрузки:', error);
-            alert(`❌ Ошибка загрузки словаря:\n\n${error.message}\n\nОткройте консоль (F12) для подробностей.`);
-        }
-    },
-
-    // Load default dictionary (HSK 1) - deprecated, kept for compatibility
-    async loadDefaultDictionary() {
-        try {
-            console.log('📥 Начинаем загрузку HSK 1...');
-            
-            // Show loading indicator
-            const loadingMsg = alert('⏳ Загрузка HSK 1 словаря...');
-            
-            // Try multiple paths for HSK 1 dictionary
-            const paths = [
-                'https://raw.githubusercontent.com/karpalig/laoshi-dictionary/main/examples/hsk1_basic.json',
-                'examples/hsk1_basic.json',
-                './examples/hsk1_basic.json',
-                '/laoshi-dictionary/examples/hsk1_basic.json'
-            ];
-            
-            let data = null;
-            let successPath = null;
-            
-            for (const path of paths) {
-                try {
-                    console.log(`Пробую загрузить: ${path}`);
-                    const response = await fetch(path);
-                    if (response.ok) {
-                        data = await response.json();
-                        successPath = path;
-                        console.log(`✅ Успешно загружено из: ${path}`);
-                        break;
-                    }
-                } catch (e) {
-                    console.log(`❌ Не удалось загрузить из: ${path}`, e);
-                }
-            }
-            
-            if (!data) {
-                throw new Error('Не удалось найти файл hsk1_basic.json. Проверьте, что файлы загружены на сервер.');
-            }
-            
-            console.log(`📊 Найдено слов: ${data.words?.length || 0}`);
-            
-            // Create dictionary
-            const dict = await db.createDictionary(
-                data.name || 'HSK 1',
-                data.description || 'Базовый уровень',
-                data.color || 'green'
-            );
-            
-            console.log(`📚 Создан словарь: ${dict.name} (ID: ${dict.id})`);
-            
-            // Import words
-            let imported = 0;
-            let errors = 0;
-            
-            for (const word of data.words || []) {
-                try {
-                    await db.createWord(
-                        word.chinese,
-                        word.pinyin,
-                        word.russian,
-                        dict.id,
-                        word.hskLevel || 0
-                    );
-                    imported++;
-                    
-                    // Log progress every 50 words
-                    if (imported % 50 === 0) {
-                        console.log(`⏳ Импортировано: ${imported}/${data.words.length}`);
-                    }
-                } catch (e) {
-                    errors++;
-                    console.error('❌ Ошибка импорта слова:', word, e);
-                }
-            }
-            
-            await this.loadData();
-            this.renderSearch();
-            this.renderDictionaries();
-            
-            console.log(`✅ Импорт завершен: ${imported} слов, ошибок: ${errors}`);
-            alert(`✅ Загружен словарь HSK 1!\n\n📊 Импортировано: ${imported} слов\n❌ Ошибок: ${errors}`);
-            
-        } catch (error) {
-            console.error('❌ Критическая ошибка загрузки:', error);
-            alert(`❌ Ошибка загрузки HSK 1:\n\n${error.message}\n\nОткройте консоль (F12) для подробностей.`);
-        }
-    },
-
-    getColorValue(colorName) {
-        const colors = {
-            'cyan': '#00CCFF',
-            'blue': '#3b82f6',
-            'purple': '#8b5cf6',
-            'pink': '#ec4899',
-            'green': '#22c55e',
-            'orange': '#f97316'
-        };
-        return colors[colorName] || '#00CCFF';
-    },
-
-    // Import/Export functions
-    showImportDialog() {
-        this.showModal('Импорт словаря', `
-            <div class="form-group">
-                <label>Формат импорта:</label>
-                <select id="import-format" style="width: 100%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 16px;">
-                    <option value="json">JSON (полный)</option>
-                    <option value="csv">CSV (слова)</option>
-                    <option value="txt">TXT (построчно)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Выберите файл:</label>
-                <input type="file" id="import-file" accept=".json,.csv,.txt" style="width: 100%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white;">
-            </div>
-            <div class="form-group">
-                <label>Название словаря:</label>
-                <input type="text" id="import-dict-name" placeholder="Импортированный словарь" style="width: 100%; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-size: 16px;">
-            </div>
-            <button class="button button-large button-fill" onclick="app.handleImport()" style="width: 100%; margin-top: 16px;">
-                Импортировать
-            </button>
-            <details style="margin-top: 16px; color: rgba(255,255,255,0.7);">
-                <summary style="cursor: pointer; font-size: 14px;">Форматы файлов</summary>
-                <div style="margin-top: 12px; font-size: 13px; line-height: 1.6;">
-                    <p><strong>JSON:</strong></p>
-                    <pre style="background: #000; padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 11px;">{
-  "name": "Словарь",
-  "words": [
-    {
-      "chinese": "你好",
-      "pinyin": "ni3 hao3",
-      "russian": "Привет",
-      "hskLevel": 1
+// Initialize Framework7 App
+const app = new Framework7({
+  el: '#app',
+  name: '老师词典',
+  theme: 'ios',
+  colors: {
+    primary: '#e94560'
+  },
+  darkMode: false,
+  touch: {
+    tapHold: true
+  },
+  on: {
+    init: async function() {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/45da4037-6012-4729-a16c-95ef8335a1bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:init',message:'F7 init callback fired',data:{appEl:!!document.getElementById('app'),tabbarVisible:document.querySelector('.tabbar')?.offsetHeight>0,tabbarDisplay:getComputedStyle(document.querySelector('.tabbar')||document.body).display},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
+      // #endregion
+      console.log('App initialized');
+      await initializeApp();
     }
-  ]
-}</pre>
-                    <p style="margin-top: 8px;"><strong>CSV (разделитель ;):</strong></p>
-                    <pre style="background: #000; padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 11px;">chinese;pinyin;russian;hsk
-你好;ni3 hao3;Привет;1
-谢谢;xie4xie;Спасибо;1</pre>
-                    <p style="margin-top: 8px;"><strong>TXT (одна строка = одно слово):</strong></p>
-                    <pre style="background: #000; padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 11px;">你好 | ni3 hao3 | Привет | 1
-谢谢 | xie4xie | Спасибо | 1</pre>
-                </div>
-            </details>
-        `);
-    },
+  }
+});
 
-    async handleImport() {
-        const format = document.getElementById('import-format').value;
-        const fileInput = document.getElementById('import-file');
-        const dictName = document.getElementById('import-dict-name').value || 'Импортированный словарь';
+// State
+let searchTimeout = null;
+let deckWordsVirtualList = null;
+let currentDeckId = null;
 
-        if (!fileInput.files[0]) {
-            alert('Выберите файл для импорта');
-            return;
-        }
+/**
+ * Initialize application
+ */
+async function initializeApp() {
+  // #region agent log
+  const tabbar = document.querySelector('.tabbar');
+  const views = document.querySelector('.views');
+  fetch('http://127.0.0.1:7243/ingest/45da4037-6012-4729-a16c-95ef8335a1bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:initializeApp',message:'initializeApp started',data:{tabbarExists:!!tabbar,tabbarParent:tabbar?.parentElement?.id,viewsClasses:views?.className,tabbarRect:tabbar?.getBoundingClientRect()},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,D,E'})}).catch(()=>{});
+  // #endregion
+  
+  // Initialize database
+  await LaoshiDB.initDB();
+  
+  // Load saved dark mode setting
+  const darkMode = await LaoshiDB.getSetting('darkMode', false);
+  if (darkMode) {
+    app.darkMode.enable();
+    document.getElementById('toggle-dark-mode').checked = true;
+  }
+  
+  // Check if dictionary is loaded
+  const isLoaded = await LaoshiDB.isDictionaryLoaded();
+  
+  if (isLoaded) {
+    showDictionaryReady();
+  } else {
+    showDictionaryInit();
+  }
+  
+  // Load decks
+  await loadDecks();
+  
+  // Update statistics
+  await updateStats();
+  
+  // Setup event listeners
+  setupEventListeners();
+}
 
-        try {
-            const file = fileInput.files[0];
-            const text = await file.text();
-            let data;
+/**
+ * Show dictionary initialization screen
+ */
+function showDictionaryInit() {
+  document.getElementById('dictionary-init').style.display = 'block';
+  document.getElementById('dictionary-loading').style.display = 'none';
+  document.getElementById('search-empty').style.display = 'none';
+  document.querySelector('.search-results').style.display = 'none';
+}
 
-            if (format === 'json') {
-                data = JSON.parse(text);
-            } else if (format === 'csv') {
-                data = this.parseCSV(text);
-            } else if (format === 'txt') {
-                data = this.parseTXT(text);
-            }
+/**
+ * Show dictionary ready state
+ */
+function showDictionaryReady() {
+  document.getElementById('dictionary-init').style.display = 'none';
+  document.getElementById('dictionary-loading').style.display = 'none';
+  document.getElementById('search-empty').style.display = 'block';
+  document.querySelector('.search-results').style.display = 'none';
+}
 
-            // Create dictionary
-            const dict = await db.createDictionary(
-                data.name || dictName,
-                data.description || `Импортировано из ${file.name}`,
-                data.color || 'cyan'
-            );
+/**
+ * Show loading state
+ */
+function showLoading(message = 'Загрузка...') {
+  document.getElementById('dictionary-init').style.display = 'none';
+  document.getElementById('dictionary-loading').style.display = 'block';
+  document.getElementById('dictionary-loading').querySelector('p').textContent = message;
+  document.getElementById('search-empty').style.display = 'none';
+}
 
-            // Import words
-            let imported = 0;
-            for (const word of data.words || []) {
-                try {
-                    await db.createWord(
-                        word.chinese,
-                        word.pinyin,
-                        word.russian,
-                        dict.id,
-                        word.hskLevel || 0
-                    );
-                    imported++;
-                } catch (e) {
-                    console.error('Error importing word:', word, e);
-                }
-            }
+/**
+ * Load dictionary from file
+ */
+async function loadDictionary() {
+  showLoading('Загрузка словаря...');
+  
+  try {
+    const count = await LaoshiDB.loadDictionary((processed, total) => {
+      const percent = Math.round((processed / total) * 100);
+      document.getElementById('dictionary-loading').querySelector('p').textContent = 
+        `Загружено ${processed} из ${total} слов (${percent}%)`;
+    });
+    
+    app.toast.create({
+      text: `Загружено ${count} слов`,
+      closeTimeout: 2000
+    }).open();
+    
+    showDictionaryReady();
+    await loadDecks();
+    await updateStats();
+  } catch (error) {
+    console.error('Failed to load dictionary:', error);
+    app.dialog.alert('Не удалось загрузить словарь. Проверьте подключение к интернету.', 'Ошибка');
+    showDictionaryInit();
+  }
+}
 
-            await this.loadData();
-            this.renderDictionaries();
-            this.closeModal();
-            
-            alert(`✅ Импортировано: ${imported} слов`);
-        } catch (error) {
-            console.error('Import error:', error);
-            alert('❌ Ошибка импорта: ' + error.message);
-        }
-    },
+/**
+ * Perform search
+ */
+async function performSearch(query) {
+  const resultsContainer = document.querySelector('.search-results');
+  const resultsList = document.getElementById('search-results-list');
+  const emptyState = document.getElementById('search-empty');
+  const noResults = document.getElementById('search-no-results');
+  
+  if (!query || query.length < 1) {
+    resultsContainer.style.display = 'none';
+    emptyState.style.display = 'block';
+    noResults.style.display = 'none';
+    return;
+  }
+  
+  emptyState.style.display = 'none';
+  
+  const results = await LaoshiDB.searchWords(query);
+  
+  if (results.length === 0) {
+    resultsContainer.style.display = 'none';
+    noResults.style.display = 'block';
+    return;
+  }
+  
+  noResults.style.display = 'none';
+  resultsContainer.style.display = 'block';
+  
+  // Render results
+  resultsList.innerHTML = results.map(word => {
+    const definition = Array.isArray(word.d) ? word.d[0] : word.d;
+    const hskBadge = word.h ? `<span class="hsk-badge">HSK ${word.h}</span>` : '';
+    
+    return `
+      <li>
+        <a href="#" class="item-link item-content word-item" data-word='${JSON.stringify(word).replace(/'/g, "&#39;")}'>
+          <div class="item-inner">
+            <div class="item-title-row">
+              <div class="item-title chinese">${escapeHtml(word.w)}${hskBadge}</div>
+            </div>
+            <div class="item-subtitle pinyin">${escapeHtml(word.p || '')}</div>
+            <div class="item-text russian">${escapeHtml(truncateText(definition, 150))}</div>
+          </div>
+        </a>
+      </li>
+    `;
+  }).join('');
+}
 
-    parseCSV(text) {
-        const lines = text.trim().split('\n');
-        const words = [];
-        
-        // Skip header
-        for (let i = 1; i < lines.length; i++) {
-            const parts = lines[i].split(';');
-            if (parts.length >= 3) {
-                words.push({
-                    chinese: parts[0].trim(),
-                    pinyin: parts[1].trim(),
-                    russian: parts[2].trim(),
-                    hskLevel: parseInt(parts[3]) || 0
-                });
-            }
-        }
-        
-        return { words };
-    },
+/**
+ * Load and display decks
+ */
+async function loadDecks() {
+  const decks = await LaoshiDB.getAllDecks();
+  
+  const systemDecks = decks.filter(d => d.type === 'system');
+  const userDecks = decks.filter(d => d.type === 'user');
+  
+  // Render system decks
+  const systemList = document.querySelector('#system-decks-list ul');
+  systemList.innerHTML = systemDecks.map(deck => {
+    const iconClass = deck.id === 'favorites' ? 'favorites' : 'hsk';
+    return `
+      <li>
+        <a href="#" class="item-link item-content deck-item ${iconClass}" data-deck-id="${deck.id}">
+          <div class="item-media">
+            <i class="f7-icons">${deck.icon || 'folder_fill'}</i>
+          </div>
+          <div class="item-inner">
+            <div class="item-title">${escapeHtml(deck.name)}</div>
+            <div class="item-after">${deck.count || 0}</div>
+          </div>
+        </a>
+      </li>
+    `;
+  }).join('');
+  
+  // Render user decks
+  const userList = document.querySelector('#user-decks-list ul');
+  if (userDecks.length === 0) {
+    userList.innerHTML = `
+      <li class="item-content" id="no-user-decks">
+        <div class="item-inner">
+          <div class="item-title text-color-gray">Нет пользовательских списков</div>
+        </div>
+      </li>
+    `;
+  } else {
+    userList.innerHTML = userDecks.map(deck => `
+      <li class="swipeout">
+        <a href="#" class="item-link item-content deck-item swipeout-content" data-deck-id="${deck.id}">
+          <div class="item-media">
+            <i class="f7-icons">${deck.icon || 'folder_fill'}</i>
+          </div>
+          <div class="item-inner">
+            <div class="item-title">${escapeHtml(deck.name)}</div>
+            <div class="item-after">${deck.count || 0}</div>
+          </div>
+        </a>
+        <div class="swipeout-actions-right">
+          <a href="#" class="swipeout-delete" data-confirm="Удалить список?" data-deck-id="${deck.id}">Удалить</a>
+        </div>
+      </li>
+    `).join('');
+  }
+}
 
-    parseTXT(text) {
-        const lines = text.trim().split('\n');
-        const words = [];
-        
-        for (const line of lines) {
-            const parts = line.split('|').map(s => s.trim());
-            if (parts.length >= 3) {
-                words.push({
-                    chinese: parts[0],
-                    pinyin: parts[1],
-                    russian: parts[2],
-                    hskLevel: parseInt(parts[3]) || 0
-                });
-            }
-        }
-        
-        return { words };
-    },
-
-    async exportDictionary(dictId) {
-        const dict = await db.get('dictionaries', dictId);
-        const words = await db.getWordsByDictionary(dictId);
-        
-        const exportData = {
-            name: dict.name,
-            description: dict.description,
-            color: dict.color,
-            words: words.map(w => ({
-                chinese: w.chinese,
-                pinyin: w.pinyin,
-                russian: w.russian,
-                hskLevel: w.hskLevel
-            })),
-            exportDate: new Date().toISOString(),
-            version: '1.0'
-        };
-
-        // Download as JSON
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-            type: 'application/json'
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${dict.name.replace(/[^a-zа-яё0-9]/gi, '_')}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        
-        console.log(`✅ Экспортировано: ${words.length} слов`);
-    },
-
-    async exportAllData() {
-        const dictionaries = await db.getAllDictionaries();
-        const allData = [];
-
-        for (const dict of dictionaries) {
-            const words = await db.getWordsByDictionary(dict.id);
-            allData.push({
-                name: dict.name,
-                description: dict.description,
-                color: dict.color,
-                words: words.map(w => ({
-                    chinese: w.chinese,
-                    pinyin: w.pinyin,
-                    russian: w.russian,
-                    hskLevel: w.hskLevel
-                }))
-            });
-        }
-
-        const exportData = {
-            dictionaries: allData,
-            exportDate: new Date().toISOString(),
-            version: '1.0'
-        };
-
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-            type: 'application/json'
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `all_dictionaries_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+/**
+ * Open deck and show words
+ */
+async function openDeck(deckId) {
+  currentDeckId = deckId;
+  const deck = await LaoshiDB.getDeck(deckId);
+  
+  if (!deck) {
+    app.dialog.alert('Список не найден', 'Ошибка');
+    return;
+  }
+  
+  document.getElementById('popup-deck-title').textContent = deck.name;
+  
+  // Load words
+  let words = [];
+  
+  if (deck.file) {
+    // HSK deck - lazy load
+    app.preloader.show();
+    words = await LaoshiDB.loadHSKDeck(deckId);
+    app.preloader.hide();
+  } else {
+    words = await LaoshiDB.getDeckWords(deckId);
+  }
+  
+  // Create virtual list
+  const container = document.getElementById('deck-words-list');
+  container.innerHTML = '';
+  
+  if (words.length === 0) {
+    container.innerHTML = `
+      <div class="block text-align-center">
+        <i class="f7-icons" style="font-size: 64px; opacity: 0.5;">doc_text</i>
+        <p>Список пуст</p>
+      </div>
+    `;
+  } else {
+    // Destroy previous virtual list if exists
+    if (deckWordsVirtualList) {
+      deckWordsVirtualList.destroy();
     }
-};
+    
+    // Create new virtual list
+    deckWordsVirtualList = app.virtualList.create({
+      el: container,
+      items: words,
+      itemTemplate: `
+        <li>
+          <div class="item-content">
+            <div class="item-inner">
+              <div class="item-title-row">
+                <div class="item-title chinese">{{word}}</div>
+              </div>
+              <div class="item-subtitle pinyin">{{pinyin}}</div>
+              <div class="item-text russian">{{translation}}</div>
+            </div>
+          </div>
+        </li>
+      `,
+      height: 80
+    });
+  }
+  
+  // Open popup
+  app.popup.open('#popup-deck-words');
+  
+  // Reload decks to update count
+  await loadDecks();
+}
+
+/**
+ * Create new user deck
+ */
+async function createNewDeck() {
+  const input = document.getElementById('input-deck-name');
+  const name = input.value.trim();
+  
+  if (!name) {
+    app.dialog.alert('Введите название списка', 'Ошибка');
+    return;
+  }
+  
+  await LaoshiDB.createDeck(name);
+  input.value = '';
+  
+  app.popup.close('#popup-add-deck');
+  await loadDecks();
+  
+  app.toast.create({
+    text: 'Список создан',
+    closeTimeout: 2000
+  }).open();
+}
+
+/**
+ * Delete user deck
+ */
+async function deleteUserDeck(deckId) {
+  await LaoshiDB.deleteDeck(deckId);
+  await loadDecks();
+  
+  app.toast.create({
+    text: 'Список удалён',
+    closeTimeout: 2000
+  }).open();
+}
+
+/**
+ * Update statistics
+ */
+async function updateStats() {
+  const stats = await LaoshiDB.getStats();
+  
+  document.getElementById('stats-words-count').textContent = stats.wordsCount.toLocaleString();
+  document.getElementById('stats-decks-count').textContent = stats.decksCount;
+  document.getElementById('stats-db-size').textContent = stats.dbSize;
+}
+
+/**
+ * Toggle dark mode
+ */
+async function toggleDarkMode(enabled) {
+  if (enabled) {
+    app.darkMode.enable();
+  } else {
+    app.darkMode.disable();
+  }
+  
+  await LaoshiDB.setSetting('darkMode', enabled);
+}
+
+/**
+ * Show word details with option to add to favorites
+ */
+function showWordDetails(word) {
+  const definition = Array.isArray(word.d) ? word.d.join('\n\n') : word.d;
+  const hskInfo = word.h ? `HSK ${word.h}` : '';
+  
+  app.dialog.create({
+    title: word.w,
+    text: `<div class="pinyin">${escapeHtml(word.p || '')}</div>
+           ${hskInfo ? `<div class="hsk-badge" style="margin: 8px 0;">${hskInfo}</div>` : ''}
+           <div class="russian" style="margin-top: 12px; text-align: left; white-space: pre-wrap;">${escapeHtml(definition)}</div>`,
+    buttons: [
+      {
+        text: '⭐ В избранное',
+        onClick: async () => {
+          const added = await LaoshiDB.toggleFavorite(word);
+          app.toast.create({
+            text: added ? 'Добавлено в избранное' : 'Удалено из избранного',
+            closeTimeout: 1500
+          }).open();
+          await loadDecks();
+        }
+      },
+      {
+        text: 'Закрыть',
+        bold: true
+      }
+    ]
+  }).open();
+}
+
+/**
+ * Setup event listeners
+ */
+function setupEventListeners() {
+  // Load dictionary button
+  document.getElementById('btn-load-dictionary').addEventListener('click', loadDictionary);
+  
+  // Search input
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      performSearch(e.target.value.trim());
+    }, 300);
+  });
+  
+  // Word item click (search results)
+  document.getElementById('search-results-list').addEventListener('click', (e) => {
+    const wordItem = e.target.closest('.word-item');
+    if (wordItem) {
+      e.preventDefault();
+      const word = JSON.parse(wordItem.dataset.word);
+      showWordDetails(word);
+    }
+  });
+  
+  // Deck item click
+  document.addEventListener('click', (e) => {
+    const deckItem = e.target.closest('.deck-item');
+    if (deckItem && !e.target.closest('.swipeout-actions-right')) {
+      e.preventDefault();
+      openDeck(deckItem.dataset.deckId);
+    }
+  });
+  
+  // Delete deck
+  document.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.swipeout-delete[data-deck-id]');
+    if (deleteBtn) {
+      const deckId = deleteBtn.dataset.deckId;
+      deleteUserDeck(deckId);
+    }
+  });
+  
+  // Add deck button
+  document.getElementById('btn-add-deck').addEventListener('click', () => {
+    app.popup.open('#popup-add-deck');
+  });
+  
+  // Save deck button
+  document.getElementById('btn-save-deck').addEventListener('click', createNewDeck);
+  
+  // Dark mode toggle
+  document.getElementById('toggle-dark-mode').addEventListener('change', (e) => {
+    toggleDarkMode(e.target.checked);
+  });
+  
+  // Tab change - update stats when settings tab is shown
+  document.querySelectorAll('.tab-link').forEach(tab => {
+    tab.addEventListener('click', async () => {
+      if (tab.getAttribute('href') === '#view-settings') {
+        await updateStats();
+      }
+    });
+  });
+}
+
+/**
+ * Utility: Escape HTML
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
+ * Utility: Truncate text
+ */
+function truncateText(text, maxLength) {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+}
+

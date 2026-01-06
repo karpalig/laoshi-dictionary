@@ -1,0 +1,22 @@
+
+## Framework7 Rules
+
+✅ **Use ONLY Framework7 native components:**
+- Searchbar, Toolbar, Tabbar, List, Media-List, Virtual-List, Card, Button, Popup
+- Framework7 Icons only
+
+❌ **Do NOT:**
+- Create custom components/navigation/buttons/modals
+- Override Framework7 styles
+- Use custom CSS classes for UI (only for data: `.chinese`, `.pinyin`)
+
+## JavaScript
+
+- ES6+ (const/let, arrow functions, async/await)
+- Use `idb` library: `await openDB()`, `db.put()`, `db.get()`, `db.getAllFromIndex()`
+- Framework7: `this.f7.popup.create()` for modals
+
+## CSS
+
+- **Only Framework7 classes** for UI components
+- Only custom styles for data display (fonts, colors for specific content)

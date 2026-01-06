@@ -1,0 +1,118 @@
+/* 
+ * 老师词典 - App Styles
+ * Only custom styles for Chinese text display
+ * All UI uses Framework7 native classes
+ */
+
+/* Fix F7 v9 tabbar layout */
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#app > .views {
+  flex: 1;
+  overflow: hidden;
+}
+
+#app > .toolbar-bottom {
+  flex-shrink: 0;
+}
+
+/* Chinese characters - large and prominent */
+.chinese {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "SimHei", sans-serif;
+  font-size: 1.5em;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* Pinyin - with tone marks styling */
+.pinyin {
+  font-family: "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  font-size: 0.95em;
+  color: var(--f7-list-item-subtitle-text-color);
+  letter-spacing: 0.02em;
+}
+
+/* Russian translation text */
+.russian {
+  font-size: 0.9em;
+  color: var(--f7-list-item-text-text-color);
+  line-height: 1.4;
+}
+
+/* HSK level badge */
+.hsk-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: 600;
+  background: var(--f7-theme-color);
+  color: #fff;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Search results item styling */
+.search-results .item-title {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "SimHei", sans-serif;
+  font-size: 1.4em;
+  font-weight: 500;
+}
+
+.search-results .item-subtitle {
+  font-family: "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.search-results .item-text {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* Deck words list styling */
+#deck-words-list .item-title {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "SimHei", sans-serif;
+  font-size: 1.3em;
+  font-weight: 500;
+}
+
+/* Loading state animation */
+#dictionary-loading .preloader {
+  width: 42px;
+  height: 42px;
+}
+
+/* Empty state icons */
+#search-empty i,
+#search-no-results i {
+  opacity: 0.5;
+}
+
+/* Dark mode adjustments for Chinese text */
+.dark .chinese {
+  font-weight: 400;
+}
+
+/* Virtual list item minimum height */
+.virtual-list .item-content {
+  min-height: 60px;
+}
+
+/* Deck item with word count badge */
+.deck-item .item-after {
+  font-weight: 600;
+}
+
+/* System deck icons coloring */
+.deck-item.favorites .item-media i {
+  color: #ff3b30;
+}
+
+.deck-item.hsk .item-media i {
+  color: var(--f7-theme-color);
+}
+

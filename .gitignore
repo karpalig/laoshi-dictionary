@@ -1,31 +1,25 @@
 # Dependencies
 node_modules/
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Lock files (optional - remove this line if you want to keep package-lock.json)
+package-lock.json
+
+# Development/temporary files
+slepok.md
+*.log
+*.tmp
 
 # OS files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Editor directories and files
+# IDE/Editor
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# Environment variables
+# Local environment
 .env
 .env.local
-
-# Build outputs (if any)
-dist/
-build/
-
-# Note: lib/framework7/ is NOT ignored - it should be committed to repo
-# so the project works without npm install
-

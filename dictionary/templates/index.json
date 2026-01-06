@@ -1,0 +1,19 @@
+{
+  "dictionaries": [
+    {
+      "name": "HSK 1 - Пример",
+      "description": "Пример словаря с базовыми словами HSK 1",
+      "source": "custom",
+      "version": "1.0",
+      "file": "hsk1-example.json"
+    },
+    {
+      "name": "Базовые слова - Пример",
+      "description": "Пример словаря с базовыми словами",
+      "source": "custom",
+      "version": "1.0",
+      "file": "basic-example.json"
+    }
+  ]
+}
+

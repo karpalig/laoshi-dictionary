@@ -1,282 +1,416 @@
-// IndexedDB Database Manager
-const DB_NAME = 'ChineseRussianDictionary';
+/**
+ * 老师词典 - Database Module
+ * IndexedDB operations using idb library
+ */
+
+const DB_NAME = 'laoshi-dictionary';
 const DB_VERSION = 1;
 
-class DatabaseManager {
-    constructor() {
-        this.db = null;
+let db = null;
+
+/**
+ * Initialize the database
+ */
+async function initDB() {
+  if (db) return db;
+  
+  db = await idb.openDB(DB_NAME, DB_VERSION, {
+    upgrade(database, oldVersion, newVersion, transaction) {
+      // Words store - main dictionary
+      if (!database.objectStoreNames.contains('words')) {
+        const wordsStore = database.createObjectStore('words', { keyPath: 'id', autoIncrement: true });
+        wordsStore.createIndex('word', 'w', { unique: false });
+        wordsStore.createIndex('pinyin', 'p', { unique: false });
+      }
+      
+      // Decks store - word lists
+      if (!database.objectStoreNames.contains('decks')) {
+        const decksStore = database.createObjectStore('decks', { keyPath: 'id' });
+        decksStore.createIndex('type', 'type', { unique: false });
+      }
+      
+      // Deck words store - words in each deck
+      if (!database.objectStoreNames.contains('deckWords')) {
+        const deckWordsStore = database.createObjectStore('deckWords', { keyPath: ['deckId', 'wordId'] });
+        deckWordsStore.createIndex('deckId', 'deckId', { unique: false });
+        deckWordsStore.createIndex('wordId', 'wordId', { unique: false });
+      }
+      
+      // Settings store
+      if (!database.objectStoreNames.contains('settings')) {
+        database.createObjectStore('settings', { keyPath: 'key' });
+      }
     }
-
-    async init() {
-        return new Promise((resolve, reject) => {
-            console.log('🔧 Opening IndexedDB...');
-            
-            if (!window.indexedDB) {
-                console.error('❌ IndexedDB not supported!');
-                reject(new Error('IndexedDB не поддерживается этим браузером'));
-                return;
-            }
-            
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-            request.onerror = () => {
-                console.error('❌ IndexedDB error:', request.error);
-                reject(request.error);
-            };
-            
-            request.onsuccess = () => {
-                console.log('✅ IndexedDB opened successfully');
-                this.db = request.result;
-                resolve(this.db);
-            };
-
-            request.onupgradeneeded = (event) => {
-                console.log('🔄 Upgrading database schema...');
-                const db = event.target.result;
-
-                // Dictionaries store
-                if (!db.objectStoreNames.contains('dictionaries')) {
-                    const dictStore = db.createObjectStore('dictionaries', { keyPath: 'id' });
-                    dictStore.createIndex('createdAt', 'createdAt', { unique: false });
-                }
-
-                // Words store
-                if (!db.objectStoreNames.contains('words')) {
-                    const wordStore = db.createObjectStore('words', { keyPath: 'id' });
-                    wordStore.createIndex('dictionaryId', 'dictionaryId', { unique: false });
-                    wordStore.createIndex('isFavorite', 'isFavorite', { unique: false });
-                    wordStore.createIndex('createdAt', 'createdAt', { unique: false });
-                }
-
-                // Examples store
-                if (!db.objectStoreNames.contains('examples')) {
-                    const exampleStore = db.createObjectStore('examples', { keyPath: 'id' });
-                    exampleStore.createIndex('wordId', 'wordId', { unique: false });
-                }
-            };
-        });
-    }
-
-    // Generic CRUD operations
-    async add(storeName, data) {
-        const tx = this.db.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        return store.add(data);
-    }
-
-    async put(storeName, data) {
-        const tx = this.db.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        return store.put(data);
-    }
-
-    async get(storeName, id) {
-        const tx = this.db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        return store.get(id);
-    }
-
-    async getAll(storeName) {
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-            const request = store.getAll();
-            
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async getAllByIndex(storeName, indexName, value) {
-        return new Promise((resolve, reject) => {
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-            const index = store.index(indexName);
-            
-            // If value is provided, use it; otherwise get all
-            const request = value !== undefined ? index.getAll(value) : index.getAll();
-            
-            request.onsuccess = () => resolve(request.result || []);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async delete(storeName, id) {
-        const tx = this.db.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        return store.delete(id);
-    }
-
-    // Dictionary operations
-    async createDictionary(name, description, color) {
-        const dictionary = {
-            id: this.generateId(),
-            name,
-            description,
-            color: color || 'cyan',
-            isActive: true,
-            createdAt: new Date().toISOString()
-        };
-        await this.add('dictionaries', dictionary);
-        return dictionary;
-    }
-
-    async getAllDictionaries() {
-        const dicts = await this.getAll('dictionaries');
-        return dicts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
-    async updateDictionary(id, updates) {
-        const dict = await this.get('dictionaries', id);
-        const updated = { ...dict, ...updates };
-        await this.put('dictionaries', updated);
-        return updated;
-    }
-
-    async deleteDictionary(id) {
-        // Delete all words in this dictionary
-        const words = await this.getAllByIndex('words', 'dictionaryId', id);
-        for (const word of words) {
-            await this.deleteWord(word.id);
-        }
-        await this.delete('dictionaries', id);
-    }
-
-    // Word operations
-    async createWord(chinese, pinyin, russian, dictionaryId, hskLevel = 0) {
-        const word = {
-            id: this.generateId(),
-            chinese,
-            pinyin: PinyinHelper.numberedToToneMarks(pinyin),
-            russian,
-            dictionaryId,
-            hskLevel,
-            isFavorite: false,
-            createdAt: new Date().toISOString(),
-            lastAccessed: null
-        };
-        await this.add('words', word);
-        return word;
-    }
-
-    async getAllWords() {
-        const words = await this.getAll('words');
-        return words.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
-    async getWordsByDictionary(dictionaryId) {
-        return await this.getAllByIndex('words', 'dictionaryId', dictionaryId);
-    }
-
-    async getFavoriteWords() {
-        // Use 1 instead of true for IndexedDB compatibility
-        return await this.getAllByIndex('words', 'isFavorite', 1);
-    }
-
-    async updateWord(id, updates) {
-        const word = await this.get('words', id);
-        const updated = { ...word, ...updates };
-        await this.put('words', updated);
-        return updated;
-    }
-
-    async deleteWord(id) {
-        // Delete all examples for this word
-        const examples = await this.getAllByIndex('examples', 'wordId', id);
-        for (const example of examples) {
-            await this.delete('examples', example.id);
-        }
-        await this.delete('words', id);
-    }
-
-    async toggleFavorite(id) {
-        const word = await this.get('words', id);
-        return await this.updateWord(id, { isFavorite: !word.isFavorite });
-    }
-
-    async updateLastAccessed(id) {
-        return await this.updateWord(id, { lastAccessed: new Date().toISOString() });
-    }
-
-    // Example operations
-    async createExample(wordId, chineseSentence, pinyinSentence, russianTranslation) {
-        const example = {
-            id: this.generateId(),
-            wordId,
-            chineseSentence,
-            pinyinSentence: PinyinHelper.numberedToToneMarks(pinyinSentence),
-            russianTranslation,
-            createdAt: new Date().toISOString()
-        };
-        await this.add('examples', example);
-        return example;
-    }
-
-    async getExamplesByWord(wordId) {
-        return await this.getAllByIndex('examples', 'wordId', wordId);
-    }
-
-    async updateExample(id, updates) {
-        const example = await this.get('examples', id);
-        const updated = { ...example, ...updates };
-        await this.put('examples', updated);
-        return updated;
-    }
-
-    async deleteExample(id) {
-        await this.delete('examples', id);
-    }
-
-    // Sample data
-    async createSampleData() {
-        // Create default dictionary
-        const dict = await this.createDictionary(
-            'Основной словарь',
-            'Основной китайско-русский словарь',
-            'cyan'
-        );
-
-        // Add sample words
-        const sampleWords = [
-            { chinese: '你好', pinyin: 'nǐ hǎo', russian: 'Привет', hsk: 1 },
-            { chinese: '谢谢', pinyin: 'xièxie', russian: 'Спасибо', hsk: 1 },
-            { chinese: '再见', pinyin: 'zàijiàn', russian: 'До свидания', hsk: 1 },
-            { chinese: '学习', pinyin: 'xuéxí', russian: 'Учиться', hsk: 2 },
-            { chinese: '汉语', pinyin: 'hànyǔ', russian: 'Китайский язык', hsk: 3 }
-        ];
-
-        for (const wordData of sampleWords) {
-            const word = await this.createWord(
-                wordData.chinese,
-                wordData.pinyin,
-                wordData.russian,
-                dict.id,
-                wordData.hsk
-            );
-
-            // Add example for first word
-            if (wordData.chinese === '你好') {
-                await this.createExample(
-                    word.id,
-                    '你好，我是学生。',
-                    'Nǐ hǎo, wǒ shì xuésheng.',
-                    'Привет, я студент.'
-                );
-            }
-        }
-
-        return dict;
-    }
-
-    // Utility
-    generateId() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
+  });
+  
+  return db;
 }
 
-// Initialize global database instance
-const db = new DatabaseManager();
+/**
+ * Check if dictionary is loaded
+ */
+async function isDictionaryLoaded() {
+  const database = await initDB();
+  const count = await database.count('words');
+  return count > 0;
+}
+
+/**
+ * Load dictionary from NDJSON file
+ */
+async function loadDictionary(progressCallback) {
+  const database = await initDB();
+  
+  const response = await fetch('dictionary/dabkrs-light.ndjson');
+  const text = await response.text();
+  const lines = text.trim().split('\n');
+  const total = lines.length;
+  
+  // Process in batches for better performance
+  const BATCH_SIZE = 500;
+  let processed = 0;
+  
+  for (let i = 0; i < lines.length; i += BATCH_SIZE) {
+    const batch = lines.slice(i, i + BATCH_SIZE);
+    const tx = database.transaction('words', 'readwrite');
+    
+    for (const line of batch) {
+      if (line.trim()) {
+        try {
+          const word = JSON.parse(line);
+          await tx.store.put(word);
+        } catch (e) {
+          console.warn('Failed to parse line:', line);
+        }
+      }
+    }
+    
+    await tx.done;
+    processed += batch.length;
+    
+    if (progressCallback) {
+      progressCallback(processed, total);
+    }
+  }
+  
+  // Create default system decks
+  await createSystemDecks();
+  
+  return processed;
+}
+
+/**
+ * Create system decks (HSK levels + favorites)
+ */
+async function createSystemDecks() {
+  const database = await initDB();
+  
+  const systemDecks = [
+    { id: 'favorites', name: '⭐ Избранное', type: 'system', icon: 'star_fill', count: 0 },
+    { id: 'hsk1', name: 'HSK 1', type: 'system', icon: 'book_fill', count: 0, file: 'dictionary/hsk-ru/hsk-level-1-ru.json' }
+  ];
+  
+  const tx = database.transaction('decks', 'readwrite');
+  for (const deck of systemDecks) {
+    const existing = await tx.store.get(deck.id);
+    if (!existing) {
+      await tx.store.put(deck);
+    }
+  }
+  await tx.done;
+}
+
+/**
+ * Search words in dictionary
+ */
+async function searchWords(query, limit = 50) {
+  if (!query || query.length < 1) return [];
+  
+  const database = await initDB();
+  const results = [];
+  const queryLower = query.toLowerCase();
+  const seen = new Set();
+  
+  // Search by Chinese characters (exact prefix match)
+  const cursorWord = await database.transaction('words').store.index('word').openCursor();
+  let cursor = cursorWord;
+  
+  while (cursor && results.length < limit) {
+    const word = cursor.value;
+    if (word.w && word.w.startsWith(query) && !seen.has(word.w)) {
+      results.push(word);
+      seen.add(word.w);
+    }
+    cursor = await cursor.continue();
+  }
+  
+  // If few results, also search by pinyin
+  if (results.length < limit) {
+    const allWords = await database.getAll('words');
+    for (const word of allWords) {
+      if (results.length >= limit) break;
+      if (seen.has(word.w)) continue;
+      
+      // Search in pinyin
+      if (word.p && word.p.toLowerCase().includes(queryLower)) {
+        results.push(word);
+        seen.add(word.w);
+        continue;
+      }
+      
+      // Search in definitions (Russian)
+      if (word.d && Array.isArray(word.d)) {
+        const defText = word.d.join(' ').toLowerCase();
+        if (defText.includes(queryLower)) {
+          results.push(word);
+          seen.add(word.w);
+        }
+      }
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Get all decks
+ */
+async function getAllDecks() {
+  const database = await initDB();
+  return await database.getAll('decks');
+}
+
+/**
+ * Get deck by ID
+ */
+async function getDeck(deckId) {
+  const database = await initDB();
+  return await database.get('decks', deckId);
+}
+
+/**
+ * Create user deck
+ */
+async function createDeck(name) {
+  const database = await initDB();
+  const id = 'user_' + Date.now();
+  const deck = {
+    id,
+    name,
+    type: 'user',
+    icon: 'folder_fill',
+    count: 0,
+    createdAt: new Date().toISOString()
+  };
+  await database.put('decks', deck);
+  return deck;
+}
+
+/**
+ * Delete deck
+ */
+async function deleteDeck(deckId) {
+  const database = await initDB();
+  
+  // Delete deck words first
+  const tx = database.transaction(['deckWords', 'decks'], 'readwrite');
+  const index = tx.objectStore('deckWords').index('deckId');
+  let cursor = await index.openCursor(IDBKeyRange.only(deckId));
+  
+  while (cursor) {
+    await cursor.delete();
+    cursor = await cursor.continue();
+  }
+  
+  // Delete deck
+  await tx.objectStore('decks').delete(deckId);
+  await tx.done;
+}
+
+/**
+ * Load HSK deck words from JSON file
+ */
+async function loadHSKDeck(deckId) {
+  const database = await initDB();
+  const deck = await database.get('decks', deckId);
+  
+  if (!deck || !deck.file) {
+    console.warn('Deck not found or has no file:', deckId);
+    return [];
+  }
+  
+  // Check if already loaded
+  const existingWords = await getDeckWords(deckId);
+  if (existingWords.length > 0) {
+    return existingWords;
+  }
+  
+  // Load from file
+  try {
+    const response = await fetch(deck.file);
+    const data = await response.json();
+    
+    const words = data.words || data;
+    const tx = database.transaction('deckWords', 'readwrite');
+    
+    for (const word of words) {
+      await tx.store.put({
+        deckId,
+        wordId: word.id || word.word,
+        word: word.word,
+        pinyin: word.py || word.pinyin,
+        translation: word.ru || (word.translations ? word.translations.join(', ') : ''),
+        hsk: word.hsk
+      });
+    }
+    
+    await tx.done;
+    
+    // Update deck count
+    await database.put('decks', { ...deck, count: words.length });
+    
+    return await getDeckWords(deckId);
+  } catch (e) {
+    console.error('Failed to load HSK deck:', e);
+    return [];
+  }
+}
+
+/**
+ * Get words in a deck
+ */
+async function getDeckWords(deckId) {
+  const database = await initDB();
+  const words = await database.getAllFromIndex('deckWords', 'deckId', deckId);
+  return words;
+}
+
+/**
+ * Add word to deck
+ */
+async function addWordToDeck(deckId, word) {
+  const database = await initDB();
+  
+  const deckWord = {
+    deckId,
+    wordId: word.w || word.id,
+    word: word.w,
+    pinyin: word.p,
+    translation: Array.isArray(word.d) ? word.d[0] : word.d,
+    hsk: word.h
+  };
+  
+  await database.put('deckWords', deckWord);
+  
+  // Update deck count
+  const deck = await database.get('decks', deckId);
+  if (deck) {
+    const count = await database.countFromIndex('deckWords', 'deckId', deckId);
+    await database.put('decks', { ...deck, count });
+  }
+}
+
+/**
+ * Remove word from deck
+ */
+async function removeWordFromDeck(deckId, wordId) {
+  const database = await initDB();
+  await database.delete('deckWords', [deckId, wordId]);
+  
+  // Update deck count
+  const deck = await database.get('decks', deckId);
+  if (deck) {
+    const count = await database.countFromIndex('deckWords', 'deckId', deckId);
+    await database.put('decks', { ...deck, count });
+  }
+}
+
+/**
+ * Check if word is in favorites
+ */
+async function isWordInFavorites(wordId) {
+  const database = await initDB();
+  const entry = await database.get('deckWords', ['favorites', wordId]);
+  return !!entry;
+}
+
+/**
+ * Toggle word in favorites
+ */
+async function toggleFavorite(word) {
+  const wordId = word.w || word.id;
+  const isFav = await isWordInFavorites(wordId);
+  
+  if (isFav) {
+    await removeWordFromDeck('favorites', wordId);
+  } else {
+    await addWordToDeck('favorites', word);
+  }
+  
+  return !isFav;
+}
+
+/**
+ * Get setting value
+ */
+async function getSetting(key, defaultValue = null) {
+  const database = await initDB();
+  const setting = await database.get('settings', key);
+  return setting ? setting.value : defaultValue;
+}
+
+/**
+ * Set setting value
+ */
+async function setSetting(key, value) {
+  const database = await initDB();
+  await database.put('settings', { key, value });
+}
+
+/**
+ * Get database statistics
+ */
+async function getStats() {
+  const database = await initDB();
+  
+  const wordsCount = await database.count('words');
+  const decksCount = await database.count('decks');
+  
+  // Estimate database size
+  let dbSize = '—';
+  if (navigator.storage && navigator.storage.estimate) {
+    const estimate = await navigator.storage.estimate();
+    if (estimate.usage) {
+      const mb = estimate.usage / (1024 * 1024);
+      dbSize = mb < 1 ? `${Math.round(estimate.usage / 1024)} KB` : `${mb.toFixed(1)} MB`;
+    }
+  }
+  
+  return {
+    wordsCount,
+    decksCount,
+    dbSize
+  };
+}
+
+// Export functions
+window.LaoshiDB = {
+  initDB,
+  isDictionaryLoaded,
+  loadDictionary,
+  searchWords,
+  getAllDecks,
+  getDeck,
+  createDeck,
+  deleteDeck,
+  loadHSKDeck,
+  getDeckWords,
+  addWordToDeck,
+  removeWordFromDeck,
+  isWordInFavorites,
+  toggleFavorite,
+  getSetting,
+  setSetting,
+  getStats
+};
+

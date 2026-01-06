@@ -1,11 +1,18 @@
 {
   "name": "laoshi-dictionary",
   "version": "1.0.0",
-  "description": "Chinese-Russian Dictionary PWA",
+  "description": "Китайско-русский словарь PWA на базе БКРС",
+  "main": "index.html",
   "scripts": {
-    "install-f7": "npm install framework7"
+    "start": "npx serve .",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": ["chinese", "russian", "dictionary", "pwa", "framework7"],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "framework7": "^8.3.4"
+    "framework7": "^9.0.2",
+    "framework7-icons": "^5.0.5",
+    "idb": "^8.0.3"
   }
 }
