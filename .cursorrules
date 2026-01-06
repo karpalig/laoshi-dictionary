@@ -1,6 +1,8 @@
 
 ## Framework7 Rules
 
+Documentaions CSS classes here: https://framework7.io/docs/
+
 ✅ **Use ONLY Framework7 native components:**
 - Searchbar, Toolbar, Tabbar, List, Media-List, Virtual-List, Card, Button, Popup
 - Framework7 Icons only

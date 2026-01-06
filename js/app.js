@@ -3,10 +3,6 @@
  * Framework7 initialization and UI logic
  */
 
-// #region agent log
-fetch('http://127.0.0.1:7243/ingest/45da4037-6012-4729-a16c-95ef8335a1bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:1',message:'Script loaded, before F7 init',data:{f7Exists:typeof Framework7,tabbarEl:!!document.querySelector('.tabbar')},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-// #endregion
-
 // Initialize Framework7 App
 const app = new Framework7({
   el: '#app',
@@ -21,9 +17,6 @@ const app = new Framework7({
   },
   on: {
     init: async function() {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/45da4037-6012-4729-a16c-95ef8335a1bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:init',message:'F7 init callback fired',data:{appEl:!!document.getElementById('app'),tabbarVisible:document.querySelector('.tabbar')?.offsetHeight>0,tabbarDisplay:getComputedStyle(document.querySelector('.tabbar')||document.body).display},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
-      // #endregion
       console.log('App initialized');
       await initializeApp();
     }
@@ -39,19 +32,13 @@ let currentDeckId = null;
  * Initialize application
  */
 async function initializeApp() {
-  // #region agent log
-  const tabbar = document.querySelector('.tabbar');
-  const views = document.querySelector('.views');
-  fetch('http://127.0.0.1:7243/ingest/45da4037-6012-4729-a16c-95ef8335a1bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:initializeApp',message:'initializeApp started',data:{tabbarExists:!!tabbar,tabbarParent:tabbar?.parentElement?.id,viewsClasses:views?.className,tabbarRect:tabbar?.getBoundingClientRect()},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,D,E'})}).catch(()=>{});
-  // #endregion
-  
   // Initialize database
   await LaoshiDB.initDB();
   
   // Load saved dark mode setting
   const darkMode = await LaoshiDB.getSetting('darkMode', false);
   if (darkMode) {
-    app.darkMode.enable();
+    app.setDarkMode(true);
     document.getElementById('toggle-dark-mode').checked = true;
   }
   
@@ -363,45 +350,45 @@ async function updateStats() {
  * Toggle dark mode
  */
 async function toggleDarkMode(enabled) {
-  if (enabled) {
-    app.darkMode.enable();
-  } else {
-    app.darkMode.disable();
-  }
-  
+  // Framework7 v9+ uses setDarkMode() instead of darkMode.enable()/disable()
+  app.setDarkMode(enabled);
   await LaoshiDB.setSetting('darkMode', enabled);
 }
+
+// Current word for popup
+let currentPopupWord = null;
+let wordDetailsPopup = null;
 
 /**
  * Show word details with option to add to favorites
  */
 function showWordDetails(word) {
-  const definition = Array.isArray(word.d) ? word.d.join('\n\n') : word.d;
-  const hskInfo = word.h ? `HSK ${word.h}` : '';
+  currentPopupWord = word;
   
-  app.dialog.create({
-    title: word.w,
-    text: `<div class="pinyin">${escapeHtml(word.p || '')}</div>
-           ${hskInfo ? `<div class="hsk-badge" style="margin: 8px 0;">${hskInfo}</div>` : ''}
-           <div class="russian" style="margin-top: 12px; text-align: left; white-space: pre-wrap;">${escapeHtml(definition)}</div>`,
-    buttons: [
-      {
-        text: '⭐ В избранное',
-        onClick: async () => {
-          const added = await LaoshiDB.toggleFavorite(word);
-          app.toast.create({
-            text: added ? 'Добавлено в избранное' : 'Удалено из избранного',
-            closeTimeout: 1500
-          }).open();
-          await loadDecks();
-        }
-      },
-      {
-        text: 'Закрыть',
-        bold: true
-      }
-    ]
-  }).open();
+  const title = word.h ? `${word.w} · HSK ${word.h}` : word.w;
+  const definitions = Array.isArray(word.d) ? word.d : [word.d];
+  
+  // Populate popup content
+  document.getElementById('popup-word-title').textContent = title;
+  document.getElementById('popup-word-chinese').textContent = word.w;
+  document.getElementById('popup-word-pinyin').textContent = word.p || '';
+  
+  // Populate definitions block
+  const definitionsBlock = document.getElementById('popup-word-definitions');
+  definitionsBlock.innerHTML = definitions.map(def => 
+    `<p class="russian">${escapeHtml(def)}</p>`
+  ).join('');
+  
+  // Create popup with swipe-to-close and no push animation
+  if (!wordDetailsPopup) {
+    wordDetailsPopup = app.popup.create({
+      el: '#popup-word-details',
+      swipeToClose: true,
+      push: false
+    });
+  }
+  
+  wordDetailsPopup.open();
 }
 
 /**
@@ -461,6 +448,18 @@ function setupEventListeners() {
     toggleDarkMode(e.target.checked);
   });
   
+  // Popup favorite button
+  document.getElementById('btn-popup-favorite').addEventListener('click', async () => {
+    if (currentPopupWord) {
+      const added = await LaoshiDB.toggleFavorite(currentPopupWord);
+      app.toast.create({
+        text: added ? 'Добавлено в избранное' : 'Удалено из избранного',
+        closeTimeout: 1500
+      }).open();
+      await loadDecks();
+    }
+  });
+  
   // Tab change - update stats when settings tab is shown
   document.querySelectorAll('.tab-link').forEach(tab => {
     tab.addEventListener('click', async () => {
@@ -489,4 +488,3 @@ function truncateText(text, maxLength) {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 }
-
