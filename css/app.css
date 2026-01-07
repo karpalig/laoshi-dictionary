@@ -37,13 +37,16 @@ html, body {
   }
 }
 
-/* Search results item styling */
+/* Search results item styling - using F7 variables */
 .search-results .item-title .chinese {
-  font-size: 1.2em;
+  /* font-size: var(--f7-list-item-title-font-size); */
 }
 
 .search-results .item-title .pinyin {
-  margin-left: 8px;
+  margin-left: var(--f7-list-item-padding-horizontal);
+  font-size: var(--f7-list-item-subtitle-font-size);
+  font-weight: var(--f7-list-item-subtitle-font-weight, 400);
+  color: var(--f7-list-item-subtitle-text-color, var(--f7-list-item-footer-text-color, rgba(0, 0, 0, 0.55)));
 }
 
 .search-results .item-text {
@@ -53,9 +56,14 @@ html, body {
 
 /* Deck words list styling */
 #deck-words-list .item-title {
-  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "SimHei", sans-serif;
-  font-size: 1.3em;
-  font-weight: 500;
+  font-size: var(--f7-list-item-title-font-size);
+  font-weight: var(--f7-list-item-title-font-weight);
+}
+
+/* Word details popup - only pinyin needs muting */
+#popup-word-pinyin {
+  margin-left: 0.3em;
+  opacity: 0.6;
 }
 
 /* Loading state animation */
