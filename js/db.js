@@ -56,12 +56,65 @@ async function isDictionaryLoaded() {
 }
 
 /**
- * Load dictionary from NDJSON file
+ * Get available dictionaries from index.json
  */
-async function loadDictionary(progressCallback) {
+async function getAvailableDictionaries() {
+  try {
+    const response = await fetch('dictionary/index.json');
+    const data = await response.json();
+    return data;
+  } catch (e) {
+    console.error('Failed to load dictionary index:', e);
+    return { dictionaries: [], default: null };
+  }
+}
+
+/**
+ * Get current dictionary ID from settings
+ */
+async function getCurrentDictionary() {
+  return await getSetting('currentDictionary', null);
+}
+
+/**
+ * Set current dictionary ID in settings
+ */
+async function setCurrentDictionary(dictionaryId) {
+  await setSetting('currentDictionary', dictionaryId);
+}
+
+/**
+ * Load dictionary from NDJSON file
+ * @param {string} filePath - Path to the dictionary file (optional, uses setting or default)
+ * @param {function} progressCallback - Progress callback (processed, total)
+ */
+async function loadDictionary(filePath, progressCallback) {
   const database = await initDB();
   
-  const response = await fetch('dictionary/dabkrs-light.ndjson');
+  // If no file path provided, get from settings or use default
+  if (!filePath) {
+    const index = await getAvailableDictionaries();
+    const currentId = await getCurrentDictionary();
+    
+    if (currentId) {
+      const dict = index.dictionaries.find(d => d.id === currentId);
+      filePath = dict ? dict.file : null;
+    }
+    
+    if (!filePath && index.default) {
+      const defaultDict = index.dictionaries.find(d => d.id === index.default);
+      filePath = defaultDict ? defaultDict.file : 'dictionary/dabkrs-light.ndjson';
+    }
+    
+    filePath = filePath || 'dictionary/dabkrs-light.ndjson';
+  }
+  
+  // Clear existing words before loading new dictionary
+  const clearTx = database.transaction('words', 'readwrite');
+  await clearTx.store.clear();
+  await clearTx.done;
+  
+  const response = await fetch(filePath);
   const text = await response.text();
   const lines = text.trim().split('\n');
   const total = lines.length;
@@ -106,8 +159,8 @@ async function createSystemDecks() {
   const database = await initDB();
   
   const systemDecks = [
-    { id: 'favorites', name: '⭐ Избранное', type: 'system', icon: 'star_fill', count: 0 },
-    { id: 'hsk1', name: 'HSK 1', type: 'system', icon: 'book_fill', count: 0, file: 'dictionary/hsk-ru/hsk-level-1-ru.json' }
+    { id: 'favorites', name: 'Избранное', type: 'system', icon: 'star', count: 0 },
+    { id: 'hsk1', name: 'HSK 1', type: 'system', icon: 'book', count: 0, file: 'dictionary/hsk-ru/hsk-level-1-ru.json' }
   ];
   
   const tx = database.transaction('decks', 'readwrite');
@@ -127,49 +180,128 @@ async function searchWords(query, limit = 50) {
   if (!query || query.length < 1) return [];
   
   const database = await initDB();
-  const results = [];
   const queryLower = query.toLowerCase();
   const seen = new Set();
+  
+  // Collect results with match type for sorting
+  const chineseMatches = [];    // Priority 1: Chinese character match
+  const pinyinExact = [];       // Priority 2: Pinyin exact match (single char words)
+  const pinyinStartsWith = [];  // Priority 3: Pinyin starts with query
+  const pinyinIncludes = [];    // Priority 4: Pinyin contains query
+  const definitionMatches = []; // Priority 5: Russian definition contains query
   
   // Search by Chinese characters (exact prefix match)
   const cursorWord = await database.transaction('words').store.index('word').openCursor();
   let cursor = cursorWord;
   
-  while (cursor && results.length < limit) {
+  while (cursor) {
     const word = cursor.value;
     if (word.w && word.w.startsWith(query) && !seen.has(word.w)) {
-      results.push(word);
+      chineseMatches.push(word);
       seen.add(word.w);
     }
     cursor = await cursor.continue();
   }
   
-  // If few results, also search by pinyin
-  if (results.length < limit) {
-    const allWords = await database.getAll('words');
-    for (const word of allWords) {
-      if (results.length >= limit) break;
-      if (seen.has(word.w)) continue;
+  // Search all words for pinyin and definition matches
+  const allWords = await database.getAll('words');
+  
+  for (const word of allWords) {
+    if (seen.has(word.w)) continue;
+    
+    const pinyinLower = (word.p || '').toLowerCase();
+    
+    // Search in pinyin
+    if (pinyinLower.includes(queryLower)) {
+      seen.add(word.w);
       
-      // Search in pinyin
-      if (word.p && word.p.toLowerCase().includes(queryLower)) {
-        results.push(word);
-        seen.add(word.w);
-        continue;
-      }
+      // Check if pinyin starts with query (without tone numbers)
+      const pinyinNoTones = pinyinLower.replace(/[0-9]/g, '');
+      const startsWithMatch = pinyinLower.startsWith(queryLower) || pinyinNoTones.startsWith(queryLower);
       
-      // Search in definitions (Russian)
-      if (word.d && Array.isArray(word.d)) {
-        const defText = word.d.join(' ').toLowerCase();
-        if (defText.includes(queryLower)) {
-          results.push(word);
-          seen.add(word.w);
+      if (startsWithMatch) {
+        // Single character words with exact pinyin match get highest priority
+        if (word.w.length === 1 && (pinyinNoTones === queryLower || pinyinLower.replace(/[0-9]/g, '') === queryLower)) {
+          pinyinExact.push(word);
+        } else {
+          pinyinStartsWith.push(word);
         }
+      } else {
+        pinyinIncludes.push(word);
+      }
+      continue;
+    }
+    
+    // Search in definitions (Russian) - only if no pinyin match
+    if (word.d && Array.isArray(word.d)) {
+      const defText = word.d.join(' ').toLowerCase();
+      if (defText.includes(queryLower)) {
+        definitionMatches.push(word);
+        seen.add(word.w);
       }
     }
   }
   
-  return results;
+  // Sort each group by HSK level (lower = more common) and word length (shorter = more basic)
+  const sortByRelevance = (a, b) => {
+    const hskA = a.h || 99;
+    const hskB = b.h || 99;
+    if (hskA !== hskB) return hskA - hskB;
+    return (a.w || '').length - (b.w || '').length;
+  };
+  
+  // Sort definition matches by relevance: prioritize words where query appears at start of definition
+  const sortDefinitionsByRelevance = (a, b) => {
+    // Get first definition and strip BKRS formatting (number prefixes, tags)
+    const cleanDef = (d) => {
+      if (!Array.isArray(d) || !d[0]) return '';
+      return d[0]
+        .toLowerCase()
+        .replace(/^\[b\][^\[]*\[\/b\]\s*/g, '')  // Remove [b]...[/b] tags
+        .replace(/^[0-9]+\)\s*/g, '')            // Remove "1) " number prefixes
+        .replace(/^[ivx]+[,.\s]+/gi, '')         // Remove Roman numerals
+        .trim();
+    };
+    
+    const defA = cleanDef(a.d);
+    const defB = cleanDef(b.d);
+    
+    // Priority 1: Definition starts with query
+    const aStartsWith = defA.startsWith(queryLower);
+    const bStartsWith = defB.startsWith(queryLower);
+    if (aStartsWith && !bStartsWith) return -1;
+    if (!aStartsWith && bStartsWith) return 1;
+    
+    // Priority 2: Query is a standalone word (surrounded by spaces/punctuation)
+    const wordBoundary = new RegExp(`(^|[\\s,;.!?])${queryLower}([\\s,;.!?]|$)`);
+    const aStandalone = wordBoundary.test(defA);
+    const bStandalone = wordBoundary.test(defB);
+    if (aStandalone && !bStandalone) return -1;
+    if (!aStandalone && bStandalone) return 1;
+    
+    // Priority 3: HSK level
+    const hskA = a.h || 99;
+    const hskB = b.h || 99;
+    if (hskA !== hskB) return hskA - hskB;
+    
+    // Priority 4: Shorter word (more basic)
+    return (a.w || '').length - (b.w || '').length;
+  };
+  
+  chineseMatches.sort(sortByRelevance);
+  pinyinExact.sort(sortByRelevance);
+  pinyinStartsWith.sort(sortByRelevance);
+  pinyinIncludes.sort(sortByRelevance);
+  definitionMatches.sort(sortDefinitionsByRelevance);
+  
+  // Combine results in priority order
+  return [
+    ...chineseMatches,
+    ...pinyinExact,
+    ...pinyinStartsWith,
+    ...pinyinIncludes,
+    ...definitionMatches
+  ].slice(0, limit);
 }
 
 /**
@@ -198,7 +330,7 @@ async function createDeck(name) {
     id,
     name,
     type: 'user',
-    icon: 'folder_fill',
+    icon: 'folder',
     count: 0,
     createdAt: new Date().toISOString()
   };
@@ -398,6 +530,9 @@ window.LaoshiDB = {
   initDB,
   isDictionaryLoaded,
   loadDictionary,
+  getAvailableDictionaries,
+  getCurrentDictionary,
+  setCurrentDictionary,
   searchWords,
   getAllDecks,
   getDeck,

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'laoshi-dictionary-v2';
+const CACHE_NAME = 'laoshi-dictionary-v11';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/css/app.css',
+  '/js/pinyin.js',
   '/js/db.js',
   '/js/app.js',
   '/icon-192.png',

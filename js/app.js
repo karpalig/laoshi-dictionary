@@ -17,7 +17,6 @@ const app = new Framework7({
   },
   on: {
     init: async function() {
-      console.log('App initialized');
       await initializeApp();
     }
   }
@@ -42,6 +41,9 @@ async function initializeApp() {
     document.getElementById('toggle-dark-mode').checked = true;
   }
   
+  // Load available dictionaries for settings
+  await loadDictionaryList();
+  
   // Check if dictionary is loaded
   const isLoaded = await LaoshiDB.isDictionaryLoaded();
   
@@ -59,6 +61,117 @@ async function initializeApp() {
   
   // Setup event listeners
   setupEventListeners();
+}
+
+/**
+ * Load and display available dictionaries in settings
+ */
+async function loadDictionaryList() {
+  const index = await LaoshiDB.getAvailableDictionaries();
+  const currentId = await LaoshiDB.getCurrentDictionary();
+  const isLoaded = await LaoshiDB.isDictionaryLoaded();
+  
+  // Determine which dictionary is active
+  const activeId = currentId || index.default;
+  const activeDict = index.dictionaries.find(d => d.id === activeId);
+  
+  // Update current dictionary display in settings
+  const currentName = document.getElementById('current-dictionary-name');
+  const currentCount = document.getElementById('current-dictionary-count');
+  
+  if (currentName && activeDict) {
+    currentName.textContent = activeDict.name;
+  }
+  
+  if (currentCount && isLoaded) {
+    const stats = await LaoshiDB.getStats();
+    currentCount.textContent = `${stats.wordsCount.toLocaleString()} слов`;
+  } else if (currentCount) {
+    currentCount.textContent = 'не загружен';
+  }
+  
+  // Update popup list
+  const listContainer = document.getElementById('dictionary-list');
+  if (!listContainer) return;
+  
+  if (index.dictionaries.length === 0) {
+    listContainer.innerHTML = `
+      <li>
+        <div class="item-content">
+          <div class="item-inner">
+            <div class="item-title text-color-gray">Нет доступных словарей</div>
+          </div>
+        </div>
+      </li>
+    `;
+    return;
+  }
+  
+  listContainer.innerHTML = index.dictionaries.map(dict => {
+    const isActive = dict.id === activeId && isLoaded;
+    const checkmark = isActive ? '<i class="f7-icons text-color-primary">checkmark_alt</i>' : '';
+    
+    return `
+      <li>
+        <a href="#" class="item-link item-content dictionary-select-item" data-dict-id="${dict.id}" data-dict-file="${dict.file}" data-dict-name="${escapeHtml(dict.name)}">
+          <div class="item-media">
+            <i class="f7-icons">book</i>
+          </div>
+          <div class="item-inner">
+            <div class="item-title">${escapeHtml(dict.name)}</div>
+            <div class="item-after">${checkmark}</div>
+          </div>
+        </a>
+      </li>
+    `;
+  }).join('');
+}
+
+/**
+ * Switch to a different dictionary
+ */
+async function switchDictionary(dictionaryId, filePath, dictName) {
+  // Close the popup first
+  app.popup.close('#popup-select-dictionary');
+  
+  app.dialog.confirm(
+    `Загрузить словарь "${dictName}"? Это заменит текущие данные.`,
+    'Сменить словарь',
+    async () => {
+      // Show Framework7 preloader with progress
+      app.dialog.preloader('Загрузка словаря...');
+      
+      try {
+        // Save the selection
+        await LaoshiDB.setCurrentDictionary(dictionaryId);
+        
+        // Load the new dictionary
+        const count = await LaoshiDB.loadDictionary(filePath, (processed, total) => {
+          const percent = Math.round((processed / total) * 100);
+          // Update preloader text if dialog still open
+          const preloaderText = document.querySelector('.dialog-preloader .dialog-title');
+          if (preloaderText) {
+            preloaderText.textContent = `Загрузка... ${percent}%`;
+          }
+        });
+        
+        app.dialog.close();
+        
+        app.toast.create({
+          text: `Загружено ${count.toLocaleString()} слов`,
+          closeTimeout: 2000
+        }).open();
+        
+        showDictionaryReady();
+        await loadDictionaryList();
+        await updateStats();
+      } catch (error) {
+        console.error('Failed to load dictionary:', error);
+        app.dialog.close();
+        app.dialog.alert('Не удалось загрузить словарь', 'Ошибка');
+      }
+    }
+  );
 }
 
 /**
@@ -151,16 +264,14 @@ async function performSearch(query) {
   // Render results
   resultsList.innerHTML = results.map(word => {
     const definition = Array.isArray(word.d) ? word.d[0] : word.d;
-    const hskBadge = word.h ? `<span class="hsk-badge">HSK ${word.h}</span>` : '';
     
     return `
       <li>
         <a href="#" class="item-link item-content word-item" data-word='${JSON.stringify(word).replace(/'/g, "&#39;")}'>
           <div class="item-inner">
             <div class="item-title-row">
-              <div class="item-title chinese">${escapeHtml(word.w)}${hskBadge}</div>
+              <div class="item-title"><span class="chinese">${escapeHtml(word.w)}</span> <span class="pinyin">${escapeHtml(LaoshiPinyin.convert(word.p || ''))}</span></div>
             </div>
-            <div class="item-subtitle pinyin">${escapeHtml(word.p || '')}</div>
             <div class="item-text russian">${escapeHtml(truncateText(definition, 150))}</div>
           </div>
         </a>
@@ -186,7 +297,7 @@ async function loadDecks() {
       <li>
         <a href="#" class="item-link item-content deck-item ${iconClass}" data-deck-id="${deck.id}">
           <div class="item-media">
-            <i class="f7-icons">${deck.icon || 'folder_fill'}</i>
+            <i class="f7-icons">${deck.icon || 'folder'}</i>
           </div>
           <div class="item-inner">
             <div class="item-title">${escapeHtml(deck.name)}</div>
@@ -212,7 +323,7 @@ async function loadDecks() {
       <li class="swipeout">
         <a href="#" class="item-link item-content deck-item swipeout-content" data-deck-id="${deck.id}">
           <div class="item-media">
-            <i class="f7-icons">${deck.icon || 'folder_fill'}</i>
+            <i class="f7-icons">${deck.icon || 'folder'}</i>
           </div>
           <div class="item-inner">
             <div class="item-title">${escapeHtml(deck.name)}</div>
@@ -270,10 +381,16 @@ async function openDeck(deckId) {
       deckWordsVirtualList.destroy();
     }
     
+    // Convert pinyin to tonal
+    const itemsWithTonalPinyin = words.map(w => ({
+      ...w,
+      pinyin: LaoshiPinyin.convert(w.pinyin || '')
+    }));
+    
     // Create new virtual list
     deckWordsVirtualList = app.virtualList.create({
       el: container,
-      items: words,
+      items: itemsWithTonalPinyin,
       itemTemplate: `
         <li>
           <div class="item-content">
@@ -365,13 +482,13 @@ let wordDetailsPopup = null;
 function showWordDetails(word) {
   currentPopupWord = word;
   
-  const title = word.h ? `${word.w} · HSK ${word.h}` : word.w;
   const definitions = Array.isArray(word.d) ? word.d : [word.d];
+  const hskBadge = word.h ? `<span class="badge">${word.h}</span>` : '';
   
   // Populate popup content
-  document.getElementById('popup-word-title').textContent = title;
+  document.getElementById('popup-word-title').innerHTML = escapeHtml(word.w) + hskBadge;
   document.getElementById('popup-word-chinese').textContent = word.w;
-  document.getElementById('popup-word-pinyin').textContent = word.p || '';
+  document.getElementById('popup-word-pinyin').textContent = LaoshiPinyin.convert(word.p || '');
   
   // Populate definitions block
   const definitionsBlock = document.getElementById('popup-word-definitions');
@@ -379,12 +496,12 @@ function showWordDetails(word) {
     `<p class="russian">${escapeHtml(def)}</p>`
   ).join('');
   
-  // Create popup with swipe-to-close and no push animation
+  // Create popup with swipe-to-close and push animation (iOS style)
   if (!wordDetailsPopup) {
     wordDetailsPopup = app.popup.create({
       el: '#popup-word-details',
       swipeToClose: true,
-      push: false
+      push: true
     });
   }
   
@@ -398,13 +515,25 @@ function setupEventListeners() {
   // Load dictionary button
   document.getElementById('btn-load-dictionary').addEventListener('click', loadDictionary);
   
-  // Search input
-  const searchInput = document.getElementById('search-input');
-  searchInput.addEventListener('input', (e) => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      performSearch(e.target.value.trim());
-    }, 300);
+  // Initialize Framework7 Searchbar
+  app.searchbar.create({
+    el: '#searchbar-dictionary',
+    customSearch: true,
+    disableButton: false,
+    on: {
+      search(sb, query) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          performSearch(query.trim());
+        }, 300);
+      },
+      clear() {
+        performSearch('');
+      },
+      disable() {
+        performSearch('');
+      }
+    }
   });
   
   // Word item click (search results)
@@ -465,8 +594,27 @@ function setupEventListeners() {
     tab.addEventListener('click', async () => {
       if (tab.getAttribute('href') === '#view-settings') {
         await updateStats();
+        await loadDictionaryList();
       }
     });
+  });
+  
+  // Open dictionary selection popup
+  document.getElementById('btn-select-dictionary').addEventListener('click', (e) => {
+    e.preventDefault();
+    app.popup.open('#popup-select-dictionary');
+  });
+  
+  // Dictionary selection in popup
+  document.getElementById('dictionary-list').addEventListener('click', (e) => {
+    const dictItem = e.target.closest('.dictionary-select-item');
+    if (dictItem) {
+      e.preventDefault();
+      const dictId = dictItem.dataset.dictId;
+      const dictFile = dictItem.dataset.dictFile;
+      const dictName = dictItem.dataset.dictName;
+      switchDictionary(dictId, dictFile, dictName);
+    }
   });
 }
 
