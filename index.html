@@ -66,7 +66,7 @@
             </div>
             
             <!-- Search results -->
-            <div class="list media-list list-strong-ios list-outline-ios inset search-results" style="display: none;">
+            <div class="list media-list list-strong-ios inset list-dividers-ios search-results" style="display: none;">
               <ul id="search-results-list">
                 <!-- Results will be inserted here -->
               </ul>
@@ -96,7 +96,7 @@
               <div class="title">列表 Списки</div>
               <div class="right">
                 <a href="#" class="link" id="btn-add-deck">
-                  <i class="f7-icons">plus_circle</i>
+                  <i class="f7-icons">plus</i>
                 </a>
               </div>
             </div>
@@ -105,7 +105,7 @@
           <div class="page-content">
             <!-- System Decks -->
             <div class="block-title">Системные списки</div>
-            <div class="list list-strong-ios list-outline-ios inset list-dividers-ios" id="system-decks-list">
+            <div class="list list-strong-ios inset list-dividers-ios" id="system-decks-list">
               <ul>
                 <!-- System decks will be inserted here -->
               </ul>
@@ -113,7 +113,7 @@
             
             <!-- User Decks -->
             <div class="block-title">Мои списки</div>
-            <div class="list list-strong-ios list-outline-ios inset list-dividers-ios" id="user-decks-list">
+            <div class="list list-strong-ios inset list-dividers-ios" id="user-decks-list">
               <ul>
                 <li class="item-content" id="no-user-decks">
                   <div class="item-inner">
@@ -139,7 +139,7 @@
           <div class="page-content">
             <!-- Appearance -->
             <div class="block-title">Оформление</div>
-            <div class="list list-strong-ios list-outline-ios inset list-dividers-ios">
+            <div class="list list-strong-ios inset list-dividers-ios">
               <ul>
                 <li>
                   <div class="item-content">
@@ -162,16 +162,16 @@
             
             <!-- Dictionary Selection -->
             <div class="block-title">Словарь</div>
-            <div class="list list-strong-ios list-outline-ios inset list-dividers-ios">
+            <div class="list list-strong-ios inset list-dividers-ios">
               <ul>
                 <li>
-                  <a href="#" class="item-link item-content" id="btn-select-dictionary">
+                  <a href="#" class="item-link item-content" id="btn-open-dictionary-popup">
                     <div class="item-media">
                       <i class="f7-icons">book</i>
                     </div>
                     <div class="item-inner">
-                      <div class="item-title" id="current-dictionary-name">БКРС Light</div>
-                      <div class="item-after" id="current-dictionary-count">0 слов</div>
+                      <div class="item-title" id="current-dictionary-name">Словарь</div>
+                      <div class="item-after" id="current-dictionary-status"></div>
                     </div>
                   </a>
                 </li>
@@ -180,7 +180,7 @@
             
             <!-- Statistics -->
             <div class="block-title">Статистика</div>
-            <div class="list list-strong-ios list-outline-ios inset list-dividers-ios">
+            <div class="list list-strong-ios inset list-dividers-ios">
               <ul>
                 <li>
                   <div class="item-content">
@@ -267,7 +267,7 @@
           </div>
         </div>
         <div class="page-content">
-          <div class="list media-list list-strong-ios list-outline-ios inset virtual-list" id="deck-words-list">
+          <div class="list media-list list-strong-ios inset list-dividers-ios virtual-list" id="deck-words-list">
             <!-- Virtual list content -->
           </div>
         </div>
@@ -292,7 +292,7 @@
           </div>
         </div>
         <div class="page-content">
-          <div class="list list-strong-ios list-outline-ios inset list-dividers-ios">
+          <div class="list list-strong-ios inset list-dividers-ios">
             <ul>
               <li class="item-content item-input">
                 <div class="item-inner">
@@ -304,6 +304,25 @@
               </li>
             </ul>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dictionary Selection Sheet Modal -->
+  <div class="sheet-modal sheet-modal-push" id="sheet-dictionary-select" data-swipe-to-close="true">
+    <div class="swipe-handler"></div>
+    <div class="page-content">
+      <div class="block-title block-title-medium margin-top">Выбор словаря</div>
+      <div class="list list-strong-ios inset list-dividers-ios">
+        <ul id="dictionary-radio-list">
+          <!-- Radio options populated dynamically -->
+        </ul>
+      </div>
+      <div class="block">
+        <div class="grid grid-cols-2 grid-gap">
+          <button class="button button-tonal" id="btn-load-selected-dictionary">Применить</button>
+          <button class="button button-tonal color-red" id="btn-clear-dictionaries">Очистить</button>
         </div>
       </div>
     </div>
@@ -343,29 +362,6 @@
     </div>
   </div>
   
-  <!-- Dictionary Selection Popup -->
-  <div class="popup" id="popup-select-dictionary">
-    <div class="view">
-      <div class="page page-current">
-        <div class="navbar">
-          <div class="navbar-bg"></div>
-          <div class="navbar-inner">
-            <div class="title">Выбор словаря</div>
-            <div class="right">
-              <a href="#" class="link popup-close">Закрыть</a>
-            </div>
-          </div>
-        </div>
-        <div class="page-content">
-          <div class="list list-strong-ios list-outline-ios inset list-dividers-ios">
-            <ul id="dictionary-list">
-              <!-- Populated dynamically -->
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Framework7 JS (local) -->
   <script src="vendor/framework7/framework7-bundle.min.js"></script>

@@ -76,26 +76,30 @@ async function loadDictionaryList() {
   const activeDict = index.dictionaries.find(d => d.id === activeId);
   
   // Update current dictionary display in settings
-  const currentName = document.getElementById('current-dictionary-name');
-  const currentCount = document.getElementById('current-dictionary-count');
+  const nameEl = document.getElementById('current-dictionary-name');
+  const statusEl = document.getElementById('current-dictionary-status');
   
-  if (currentName && activeDict) {
-    currentName.textContent = activeDict.name;
+  if (nameEl && activeDict) {
+    nameEl.textContent = activeDict.name;
+  } else if (nameEl) {
+    nameEl.textContent = 'Не выбран';
   }
   
-  if (currentCount && isLoaded) {
-    const stats = await LaoshiDB.getStats();
-    currentCount.textContent = `${stats.wordsCount.toLocaleString()} слов`;
-  } else if (currentCount) {
-    currentCount.textContent = 'не загружен';
+  if (statusEl) {
+    if (isLoaded) {
+      const stats = await LaoshiDB.getStats();
+      statusEl.textContent = `${stats.wordsCount.toLocaleString()} слов`;
+    } else {
+      statusEl.textContent = 'не загружен';
+    }
   }
   
-  // Update popup list
-  const listContainer = document.getElementById('dictionary-list');
-  if (!listContainer) return;
+  // Update radio list in popup
+  const radioList = document.getElementById('dictionary-radio-list');
+  if (!radioList) return;
   
   if (index.dictionaries.length === 0) {
-    listContainer.innerHTML = `
+    radioList.innerHTML = `
       <li>
         <div class="item-content">
           <div class="item-inner">
@@ -107,71 +111,20 @@ async function loadDictionaryList() {
     return;
   }
   
-  listContainer.innerHTML = index.dictionaries.map(dict => {
-    const isActive = dict.id === activeId && isLoaded;
-    const checkmark = isActive ? '<i class="f7-icons text-color-primary">checkmark_alt</i>' : '';
-    
+  radioList.innerHTML = index.dictionaries.map((dict, idx) => {
+    const isActive = dict.id === activeId;
     return `
       <li>
-        <a href="#" class="item-link item-content dictionary-select-item" data-dict-id="${dict.id}" data-dict-file="${dict.file}" data-dict-name="${escapeHtml(dict.name)}">
-          <div class="item-media">
-            <i class="f7-icons">book</i>
-          </div>
+        <label class="item-radio item-content">
+          <input type="radio" name="dictionary-radio" value="${dict.id}" data-dict-file="${dict.file}" ${isActive ? 'checked' : ''}>
+          <i class="icon icon-radio"></i>
           <div class="item-inner">
             <div class="item-title">${escapeHtml(dict.name)}</div>
-            <div class="item-after">${checkmark}</div>
           </div>
-        </a>
+        </label>
       </li>
     `;
   }).join('');
-}
-
-/**
- * Switch to a different dictionary
- */
-async function switchDictionary(dictionaryId, filePath, dictName) {
-  // Close the popup first
-  app.popup.close('#popup-select-dictionary');
-  
-  app.dialog.confirm(
-    `Загрузить словарь "${dictName}"? Это заменит текущие данные.`,
-    'Сменить словарь',
-    async () => {
-      // Show Framework7 preloader with progress
-      app.dialog.preloader('Загрузка словаря...');
-      
-      try {
-        // Save the selection
-        await LaoshiDB.setCurrentDictionary(dictionaryId);
-        
-        // Load the new dictionary
-        const count = await LaoshiDB.loadDictionary(filePath, (processed, total) => {
-          const percent = Math.round((processed / total) * 100);
-          // Update preloader text if dialog still open
-          const preloaderText = document.querySelector('.dialog-preloader .dialog-title');
-          if (preloaderText) {
-            preloaderText.textContent = `Загрузка... ${percent}%`;
-          }
-        });
-        
-        app.dialog.close();
-        
-        app.toast.create({
-          text: `Загружено ${count.toLocaleString()} слов`,
-          closeTimeout: 2000
-        }).open();
-        
-        showDictionaryReady();
-        await loadDictionaryList();
-        await updateStats();
-      } catch (error) {
-        console.error('Failed to load dictionary:', error);
-        app.dialog.close();
-        app.dialog.alert('Не удалось загрузить словарь', 'Ошибка');
-      }
-    }
-  );
 }
 
 /**
@@ -599,22 +552,68 @@ function setupEventListeners() {
     });
   });
   
-  // Open dictionary selection popup
-  document.getElementById('btn-select-dictionary').addEventListener('click', (e) => {
+  // Open dictionary selection sheet
+  document.getElementById('btn-open-dictionary-popup')?.addEventListener('click', (e) => {
     e.preventDefault();
-    app.popup.open('#popup-select-dictionary');
+    app.sheet.open('#sheet-dictionary-select');
   });
   
-  // Dictionary selection in popup
-  document.getElementById('dictionary-list').addEventListener('click', (e) => {
-    const dictItem = e.target.closest('.dictionary-select-item');
-    if (dictItem) {
-      e.preventDefault();
-      const dictId = dictItem.dataset.dictId;
-      const dictFile = dictItem.dataset.dictFile;
-      const dictName = dictItem.dataset.dictName;
-      switchDictionary(dictId, dictFile, dictName);
+  // Load selected dictionary button
+  document.getElementById('btn-load-selected-dictionary')?.addEventListener('click', async () => {
+    const selected = document.querySelector('input[name="dictionary-radio"]:checked');
+    if (!selected) {
+      app.dialog.alert('Выберите словарь из списка');
+      return;
     }
+    
+    const dictId = selected.value;
+    const dictFile = selected.dataset.dictFile;
+    const dictName = selected.closest('li').querySelector('.item-title').textContent;
+    
+    app.sheet.close('#sheet-dictionary-select');
+    
+    // Load the dictionary with progress
+    app.dialog.preloader('Загрузка словаря...');
+    try {
+      await LaoshiDB.setCurrentDictionary(dictId);
+      const count = await LaoshiDB.loadDictionary(dictFile, (processed, total) => {
+        const percent = Math.round((processed / total) * 100);
+        const preloaderText = document.querySelector('.dialog-preloader .dialog-title');
+        if (preloaderText) {
+          preloaderText.textContent = `Загрузка... ${percent}%`;
+        }
+      });
+      app.dialog.close();
+      app.toast.create({ text: `Загружено ${count.toLocaleString()} слов`, closeTimeout: 2000 }).open();
+      showDictionaryReady();
+      await loadDictionaryList();
+      await updateStats();
+    } catch (error) {
+      app.dialog.close();
+      app.dialog.alert(`Ошибка загрузки: ${error.message}`);
+    }
+  });
+  
+  // Clear dictionaries button
+  document.getElementById('btn-clear-dictionaries')?.addEventListener('click', () => {
+    app.dialog.confirm(
+      'Удалить все загруженные словари? Это очистит базу данных.',
+      'Очистить словари',
+      async () => {
+        app.sheet.close('#sheet-dictionary-select');
+        app.dialog.preloader('Очистка...');
+        try {
+          await LaoshiDB.clearDictionary();
+          app.dialog.close();
+          app.toast.create({ text: 'Словари очищены', closeTimeout: 2000 }).open();
+          await loadDictionaryList();
+          await updateStats();
+        } catch (error) {
+          app.dialog.close();
+          app.dialog.alert(`Ошибка: ${error.message}`);
+        }
+      }
+    );
   });
 }
 

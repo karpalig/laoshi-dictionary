@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laoshi-dictionary-v11';
+const CACHE_NAME = 'laoshi-dictionary-v15';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
