@@ -9,10 +9,10 @@ const STATIC_ASSETS = [
   '/js/app.js',
   '/icon-192.png',
   '/favicon.ico',
-  '/node_modules/framework7/framework7-bundle.min.css',
-  '/node_modules/framework7-icons/css/framework7-icons.css',
-  '/node_modules/framework7/framework7-bundle.min.js',
-  '/node_modules/idb/build/umd.js'
+  '/vendor/framework7/framework7-bundle.min.css',
+  '/vendor/framework7-icons/css/framework7-icons.css',
+  '/vendor/framework7/framework7-bundle.min.js',
+  '/vendor/idb/umd.js'
 ];
 
 // Install event - cache static assets
