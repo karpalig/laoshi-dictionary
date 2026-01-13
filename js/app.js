@@ -22,45 +22,179 @@ const app = new Framework7({
   }
 });
 
-// State
-let searchTimeout = null;
-let deckWordsVirtualList = null;
-let currentDeckId = null;
+// Application State Management
+const AppState = {
+  searchTimeout: null,
+  deckWordsVirtualList: null,
+  currentDeckId: null,
+  currentPopupWord: null,
+  wordDetailsPopup: null,
+  
+  // Clear search timeout
+  clearSearchTimeout() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = null;
+    }
+  },
+  
+  // Clear virtual list
+  clearVirtualList() {
+    if (this.deckWordsVirtualList) {
+      this.deckWordsVirtualList.destroy();
+      this.deckWordsVirtualList = null;
+    }
+  },
+  
+  // Reset deck state
+  resetDeckState() {
+    this.clearVirtualList();
+    this.currentDeckId = null;
+  },
+  
+  // Reset word popup state
+  resetWordPopupState() {
+    this.currentPopupWord = null;
+  },
+  
+  // Full state reset (for tab switches)
+  reset() {
+    this.clearSearchTimeout();
+    this.resetDeckState();
+  }
+};
+
+/**
+ * Unified UI state management for dictionary view
+ * @param {string} state - One of: 'init', 'loading', 'ready', 'searching'
+ * @param {string} message - Optional message for loading state
+ */
+function setDictionaryViewState(state, message = 'Загрузка...') {
+  console.log(`[App] Setting dictionary view state: ${state}`);
+  
+  const initEl = document.getElementById('dictionary-init');
+  const loadingEl = document.getElementById('dictionary-loading');
+  const emptyEl = document.getElementById('search-empty');
+  const resultsEl = document.querySelector('.search-results');
+  const noResultsEl = document.getElementById('search-no-results');
+  
+  // Hide all states
+  initEl.style.display = 'none';
+  loadingEl.style.display = 'none';
+  emptyEl.style.display = 'none';
+  resultsEl.style.display = 'none';
+  noResultsEl.style.display = 'none';
+  
+  // Show appropriate state
+  switch (state) {
+    case 'init':
+      initEl.style.display = 'block';
+      break;
+    case 'loading':
+      loadingEl.style.display = 'block';
+      loadingEl.querySelector('p').textContent = message;
+      break;
+    case 'ready':
+      emptyEl.style.display = 'block';
+      break;
+    case 'searching':
+      // Results will be shown by performSearch
+      break;
+    default:
+      console.warn(`[App] Unknown dictionary view state: ${state}`);
+      emptyEl.style.display = 'block';
+  }
+}
 
 /**
  * Initialize application
  */
 async function initializeApp() {
-  // Initialize database
-  await LaoshiDB.initDB();
-  
-  // Load saved dark mode setting
-  const darkMode = await LaoshiDB.getSetting('darkMode', false);
-  if (darkMode) {
-    app.setDarkMode(true);
-    document.getElementById('toggle-dark-mode').checked = true;
+  try {
+    console.log('[App] Initializing application...');
+    
+    // Initialize database
+    try {
+      await LaoshiDB.initDB();
+    } catch (error) {
+      console.error('[App] Database initialization failed:', error);
+      app.dialog.alert(
+        'Не удалось инициализировать базу данных. Попробуйте перезагрузить страницу.',
+        'Ошибка базы данных'
+      );
+      return;
+    }
+    
+    // Load saved dark mode setting
+    try {
+      const darkMode = await LaoshiDB.getSetting('darkMode', false);
+      if (darkMode) {
+        app.setDarkMode(true);
+        const toggle = document.getElementById('toggle-dark-mode');
+        if (toggle) toggle.checked = true;
+      }
+    } catch (error) {
+      console.error('[App] Failed to load dark mode setting:', error);
+      // Non-critical, continue
+    }
+    
+    // Load available dictionaries for settings
+    try {
+      await loadDictionaryList();
+    } catch (error) {
+      console.error('[App] Failed to load dictionary list:', error);
+      // Non-critical, continue
+    }
+    
+    // Check if dictionary is loaded
+    try {
+      const isLoaded = await LaoshiDB.isDictionaryLoaded();
+      
+      if (isLoaded) {
+        setDictionaryViewState('ready');
+      } else {
+        setDictionaryViewState('init');
+      }
+    } catch (error) {
+      console.error('[App] Failed to check dictionary status:', error);
+      setDictionaryViewState('init');
+    }
+    
+    // Load decks
+    try {
+      await loadDecks();
+    } catch (error) {
+      console.error('[App] Failed to load decks:', error);
+      // Non-critical, continue
+    }
+    
+    // Update statistics
+    try {
+      await updateStats();
+    } catch (error) {
+      console.error('[App] Failed to update stats:', error);
+      // Non-critical, continue
+    }
+    
+    // Setup event listeners
+    try {
+      setupEventListeners();
+    } catch (error) {
+      console.error('[App] Failed to setup event listeners:', error);
+      app.dialog.alert(
+        'Произошла ошибка при настройке интерфейса. Попробуйте перезагрузить страницу.',
+        'Ошибка'
+      );
+    }
+    
+    console.log('[App] Application initialized successfully');
+  } catch (error) {
+    console.error('[App] Critical error during initialization:', error);
+    app.dialog.alert(
+      'Произошла критическая ошибка. Попробуйте перезагрузить страницу.',
+      'Критическая ошибка'
+    );
   }
-  
-  // Load available dictionaries for settings
-  await loadDictionaryList();
-  
-  // Check if dictionary is loaded
-  const isLoaded = await LaoshiDB.isDictionaryLoaded();
-  
-  if (isLoaded) {
-    showDictionaryReady();
-  } else {
-    showDictionaryInit();
-  }
-  
-  // Load decks
-  await loadDecks();
-  
-  // Update statistics
-  await updateStats();
-  
-  // Setup event listeners
-  setupEventListeners();
 }
 
 /**
@@ -128,46 +262,15 @@ async function loadDictionaryList() {
 }
 
 /**
- * Show dictionary initialization screen
- */
-function showDictionaryInit() {
-  document.getElementById('dictionary-init').style.display = 'block';
-  document.getElementById('dictionary-loading').style.display = 'none';
-  document.getElementById('search-empty').style.display = 'none';
-  document.querySelector('.search-results').style.display = 'none';
-}
-
-/**
- * Show dictionary ready state
- */
-function showDictionaryReady() {
-  document.getElementById('dictionary-init').style.display = 'none';
-  document.getElementById('dictionary-loading').style.display = 'none';
-  document.getElementById('search-empty').style.display = 'block';
-  document.querySelector('.search-results').style.display = 'none';
-}
-
-/**
- * Show loading state
- */
-function showLoading(message = 'Загрузка...') {
-  document.getElementById('dictionary-init').style.display = 'none';
-  document.getElementById('dictionary-loading').style.display = 'block';
-  document.getElementById('dictionary-loading').querySelector('p').textContent = message;
-  document.getElementById('search-empty').style.display = 'none';
-}
-
-/**
  * Load dictionary from file
  */
 async function loadDictionary() {
-  showLoading('Загрузка словаря...');
+  setDictionaryViewState('loading', 'Загрузка словаря...');
   
   try {
     const count = await LaoshiDB.loadDictionary((processed, total) => {
       const percent = Math.round((processed / total) * 100);
-      document.getElementById('dictionary-loading').querySelector('p').textContent = 
-        `Загружено ${processed} из ${total} слов (${percent}%)`;
+      setDictionaryViewState('loading', `Загружено ${processed} из ${total} слов (${percent}%)`);
     });
     
     app.toast.create({
@@ -175,13 +278,13 @@ async function loadDictionary() {
       closeTimeout: 2000
     }).open();
     
-    showDictionaryReady();
+    setDictionaryViewState('ready');
     await loadDecks();
     await updateStats();
   } catch (error) {
-    console.error('Failed to load dictionary:', error);
+    console.error('[App] Failed to load dictionary:', error);
     app.dialog.alert('Не удалось загрузить словарь. Проверьте подключение к интернету.', 'Ошибка');
-    showDictionaryInit();
+    setDictionaryViewState('init');
   }
 }
 
@@ -189,105 +292,150 @@ async function loadDictionary() {
  * Perform search
  */
 async function performSearch(query) {
-  const resultsContainer = document.querySelector('.search-results');
-  const resultsList = document.getElementById('search-results-list');
-  const emptyState = document.getElementById('search-empty');
-  const noResults = document.getElementById('search-no-results');
-  
-  if (!query || query.length < 1) {
-    resultsContainer.style.display = 'none';
-    emptyState.style.display = 'block';
-    noResults.style.display = 'none';
-    return;
-  }
-  
-  emptyState.style.display = 'none';
-  
-  const results = await LaoshiDB.searchWords(query);
-  
-  if (results.length === 0) {
-    resultsContainer.style.display = 'none';
-    noResults.style.display = 'block';
-    return;
-  }
-  
-  noResults.style.display = 'none';
-  resultsContainer.style.display = 'block';
-  
-  // Render results
-  resultsList.innerHTML = results.map(word => {
-    const definition = Array.isArray(word.d) ? word.d[0] : word.d;
+  try {
+    const resultsContainer = document.querySelector('.search-results');
+    const resultsList = document.getElementById('search-results-list');
+    const emptyState = document.getElementById('search-empty');
+    const noResults = document.getElementById('search-no-results');
     
-    return `
-      <li>
-        <a href="#" class="item-link item-content word-item" data-word='${JSON.stringify(word).replace(/'/g, "&#39;")}'>
-          <div class="item-inner">
-            <div class="item-title-row">
-              <div class="item-title"><span class="chinese">${escapeHtml(word.w)}</span> <span class="pinyin">${escapeHtml(LaoshiPinyin.convert(word.p || ''))}</span></div>
-            </div>
-            <div class="item-text russian">${escapeHtml(truncateText(definition, 150))}</div>
-          </div>
-        </a>
-      </li>
-    `;
-  }).join('');
+    if (!query || query.length < 1) {
+      resultsContainer.style.display = 'none';
+      emptyState.style.display = 'block';
+      noResults.style.display = 'none';
+      return;
+    }
+    
+    emptyState.style.display = 'none';
+    
+    // Perform search with error handling
+    let results;
+    try {
+      results = await LaoshiDB.searchWords(query);
+    } catch (error) {
+      console.error('[App] Search failed:', error);
+      app.toast.create({
+        text: 'Ошибка поиска. Попробуйте снова.',
+        closeTimeout: 2000
+      }).open();
+      resultsContainer.style.display = 'none';
+      emptyState.style.display = 'block';
+      return;
+    }
+    
+    if (results.length === 0) {
+      resultsContainer.style.display = 'none';
+      noResults.style.display = 'block';
+      return;
+    }
+    
+    noResults.style.display = 'none';
+    resultsContainer.style.display = 'block';
+    
+    // Render results
+    try {
+      resultsList.innerHTML = results.map(word => {
+        const definition = Array.isArray(word.d) ? word.d[0] : word.d;
+        
+        return `
+          <li>
+            <a href="#" class="item-link item-content word-item" data-word='${JSON.stringify(word).replace(/'/g, "&#39;")}'>
+              <div class="item-inner">
+                <div class="item-title-row">
+                  <div class="item-title"><span class="chinese">${escapeHtml(word.w)}</span> <span class="pinyin">${escapeHtml(LaoshiPinyin.convert(word.p || ''))}</span></div>
+                </div>
+                <div class="item-text russian">${escapeHtml(truncateText(definition, 150))}</div>
+              </div>
+            </a>
+          </li>
+        `;
+      }).join('');
+    } catch (error) {
+      console.error('[App] Failed to render search results:', error);
+      app.toast.create({
+        text: 'Ошибка отображения результатов',
+        closeTimeout: 2000
+      }).open();
+    }
+  } catch (error) {
+    console.error('[App] Unexpected error in performSearch:', error);
+  }
 }
 
 /**
  * Load and display decks
  */
 async function loadDecks() {
-  const decks = await LaoshiDB.getAllDecks();
-  
-  const systemDecks = decks.filter(d => d.type === 'system');
-  const userDecks = decks.filter(d => d.type === 'user');
-  
-  // Render system decks
-  const systemList = document.querySelector('#system-decks-list ul');
-  systemList.innerHTML = systemDecks.map(deck => {
-    const iconClass = deck.id === 'favorites' ? 'favorites' : 'hsk';
-    return `
-      <li>
-        <a href="#" class="item-link item-content deck-item ${iconClass}" data-deck-id="${deck.id}">
-          <div class="item-media">
-            <i class="f7-icons">${deck.icon || 'folder'}</i>
-          </div>
-          <div class="item-inner">
-            <div class="item-title">${escapeHtml(deck.name)}</div>
-            <div class="item-after">${deck.count || 0}</div>
-          </div>
-        </a>
-      </li>
-    `;
-  }).join('');
-  
-  // Render user decks
-  const userList = document.querySelector('#user-decks-list ul');
-  if (userDecks.length === 0) {
-    userList.innerHTML = `
-      <li class="item-content" id="no-user-decks">
-        <div class="item-inner">
-          <div class="item-title text-color-gray">Нет пользовательских списков</div>
-        </div>
-      </li>
-    `;
-  } else {
-    userList.innerHTML = userDecks.map(deck => `
-      <li class="swipeout">
-        <a href="#" class="item-link item-content deck-item swipeout-content" data-deck-id="${deck.id}">
-          <div class="item-media">
-            <i class="f7-icons">${deck.icon || 'folder'}</i>
-          </div>
-          <div class="item-inner">
-            <div class="item-title">${escapeHtml(deck.name)}</div>
-            <div class="item-after">${deck.count || 0}</div>
-          </div>
-        </a>
-        <div class="swipeout-actions-right">
-          <a href="#" class="swipeout-delete" data-confirm="Удалить список?" data-deck-id="${deck.id}">Удалить</a>
-        </div>
-      </li>
-    `).join('');
+  try {
+    console.log('[App] Loading decks...');
+    const decks = await LaoshiDB.getAllDecks();
+    
+    const systemDecks = decks.filter(d => d.type === 'system');
+    const userDecks = decks.filter(d => d.type === 'user');
+    
+    // Render system decks
+    try {
+      const systemList = document.querySelector('#system-decks-list ul');
+      if (systemList) {
+        systemList.innerHTML = systemDecks.map(deck => {
+          const iconClass = deck.id === 'favorites' ? 'favorites' : 'hsk';
+          return `
+            <li>
+              <a href="#" class="item-link item-content deck-item ${iconClass}" data-deck-id="${deck.id}">
+                <div class="item-media">
+                  <i class="f7-icons">${deck.icon || 'folder'}</i>
+                </div>
+                <div class="item-inner">
+                  <div class="item-title">${escapeHtml(deck.name)}</div>
+                  <div class="item-after">${deck.count || 0}</div>
+                </div>
+              </a>
+            </li>
+          `;
+        }).join('');
+      }
+    } catch (error) {
+      console.error('[App] Failed to render system decks:', error);
+    }
+    
+    // Render user decks
+    try {
+      const userList = document.querySelector('#user-decks-list ul');
+      if (userList) {
+        if (userDecks.length === 0) {
+          userList.innerHTML = `
+            <li class="item-content" id="no-user-decks">
+              <div class="item-inner">
+                <div class="item-title text-color-gray">Нет пользовательских списков</div>
+              </div>
+            </li>
+          `;
+        } else {
+          userList.innerHTML = userDecks.map(deck => `
+            <li class="swipeout">
+              <a href="#" class="item-link item-content deck-item swipeout-content" data-deck-id="${deck.id}">
+                <div class="item-media">
+                  <i class="f7-icons">${deck.icon || 'folder'}</i>
+                </div>
+                <div class="item-inner">
+                  <div class="item-title">${escapeHtml(deck.name)}</div>
+                  <div class="item-after">${deck.count || 0}</div>
+                </div>
+              </a>
+              <div class="swipeout-actions-right">
+                <a href="#" class="swipeout-delete" data-confirm="Удалить список?" data-deck-id="${deck.id}">Удалить</a>
+              </div>
+            </li>
+          `).join('');
+        }
+      }
+    } catch (error) {
+      console.error('[App] Failed to render user decks:', error);
+    }
+    
+    console.log('[App] Decks loaded successfully');
+  } catch (error) {
+    console.error('[App] Failed to load decks:', error);
+    throw error;
   }
 }
 
@@ -295,77 +443,93 @@ async function loadDecks() {
  * Open deck and show words
  */
 async function openDeck(deckId) {
-  currentDeckId = deckId;
-  const deck = await LaoshiDB.getDeck(deckId);
-  
-  if (!deck) {
-    app.dialog.alert('Список не найден', 'Ошибка');
-    return;
-  }
-  
-  document.getElementById('popup-deck-title').textContent = deck.name;
-  
-  // Load words
-  let words = [];
-  
-  if (deck.file) {
-    // HSK deck - lazy load
-    app.preloader.show();
-    words = await LaoshiDB.loadHSKDeck(deckId);
-    app.preloader.hide();
-  } else {
-    words = await LaoshiDB.getDeckWords(deckId);
-  }
-  
-  // Create virtual list
-  const container = document.getElementById('deck-words-list');
-  container.innerHTML = '';
-  
-  if (words.length === 0) {
-    container.innerHTML = `
-      <div class="block text-align-center">
-        <i class="f7-icons" style="font-size: 64px; opacity: 0.5;">doc_text</i>
-        <p>Список пуст</p>
-      </div>
-    `;
-  } else {
-    // Destroy previous virtual list if exists
-    if (deckWordsVirtualList) {
-      deckWordsVirtualList.destroy();
+  try {
+    AppState.currentDeckId = deckId;
+    const deck = await LaoshiDB.getDeck(deckId);
+    
+    if (!deck) {
+      app.dialog.alert('Список не найден', 'Ошибка');
+      return;
     }
     
-    // Convert pinyin to tonal
-    const itemsWithTonalPinyin = words.map(w => ({
-      ...w,
-      pinyin: LaoshiPinyin.convert(w.pinyin || '')
-    }));
+    document.getElementById('popup-deck-title').textContent = deck.name;
     
-    // Create new virtual list
-    deckWordsVirtualList = app.virtualList.create({
-      el: container,
-      items: itemsWithTonalPinyin,
-      itemTemplate: `
-        <li>
-          <div class="item-content">
-            <div class="item-inner">
-              <div class="item-title-row">
-                <div class="item-title chinese">{{word}}</div>
+    // Load words
+    let words = [];
+    
+    if (deck.file) {
+      // HSK deck - lazy load
+      app.preloader.show();
+      try {
+        words = await LaoshiDB.loadHSKDeck(deckId);
+      } catch (error) {
+        console.error('[App] Failed to load HSK deck:', error);
+        app.preloader.hide();
+        app.toast.create({
+          text: 'Не удалось загрузить список',
+          closeTimeout: 2000
+        }).open();
+        return;
+      }
+      app.preloader.hide();
+    } else {
+      words = await LaoshiDB.getDeckWords(deckId);
+    }
+    
+    // Create virtual list
+    const container = document.getElementById('deck-words-list');
+    container.innerHTML = '';
+    
+    if (words.length === 0) {
+      container.innerHTML = `
+        <div class="block text-align-center">
+          <i class="f7-icons" style="font-size: 64px; opacity: 0.5;">doc_text</i>
+          <p>Список пуст</p>
+        </div>
+      `;
+    } else {
+      // Destroy previous virtual list if exists
+      AppState.clearVirtualList();
+      
+      // Convert pinyin to tonal
+      const itemsWithTonalPinyin = words.map(w => ({
+        ...w,
+        pinyin: LaoshiPinyin.convert(w.pinyin || '')
+      }));
+      
+      // Create new virtual list
+      AppState.deckWordsVirtualList = app.virtualList.create({
+        el: container,
+        items: itemsWithTonalPinyin,
+        itemTemplate: `
+          <li>
+            <div class="item-content">
+              <div class="item-inner">
+                <div class="item-title-row">
+                  <div class="item-title chinese">{{word}}</div>
+                </div>
+                <div class="item-subtitle pinyin">{{pinyin}}</div>
+                <div class="item-text russian">{{translation}}</div>
               </div>
-              <div class="item-subtitle pinyin">{{pinyin}}</div>
-              <div class="item-text russian">{{translation}}</div>
             </div>
-          </div>
-        </li>
-      `,
-      height: 80
-    });
+          </li>
+        `,
+        height: 80
+      });
+    }
+    
+    // Open popup
+    app.popup.open('#popup-deck-words');
+    
+    // Reload decks to update count
+    await loadDecks();
+  } catch (error) {
+    console.error('[App] Failed to open deck:', error);
+    app.toast.create({
+      text: 'Ошибка при открытии списка',
+      closeTimeout: 2000
+    }).open();
   }
-  
-  // Open popup
-  app.popup.open('#popup-deck-words');
-  
-  // Reload decks to update count
-  await loadDecks();
 }
 
 /**
@@ -425,15 +589,11 @@ async function toggleDarkMode(enabled) {
   await LaoshiDB.setSetting('darkMode', enabled);
 }
 
-// Current word for popup
-let currentPopupWord = null;
-let wordDetailsPopup = null;
-
 /**
  * Show word details with option to add to favorites
  */
 function showWordDetails(word) {
-  currentPopupWord = word;
+  AppState.currentPopupWord = word;
   
   const definitions = Array.isArray(word.d) ? word.d : [word.d];
   const hskBadge = word.h ? `<span class="badge">${word.h}</span>` : '';
@@ -450,15 +610,15 @@ function showWordDetails(word) {
   ).join('');
   
   // Create popup with swipe-to-close and push animation (iOS style)
-  if (!wordDetailsPopup) {
-    wordDetailsPopup = app.popup.create({
+  if (!AppState.wordDetailsPopup) {
+    AppState.wordDetailsPopup = app.popup.create({
       el: '#popup-word-details',
       swipeToClose: true,
       push: true
     });
   }
   
-  wordDetailsPopup.open();
+  AppState.wordDetailsPopup.open();
 }
 
 /**
@@ -475,8 +635,8 @@ function setupEventListeners() {
     disableButton: false,
     on: {
       search(sb, query) {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
+        AppState.clearSearchTimeout();
+        AppState.searchTimeout = setTimeout(() => {
           performSearch(query.trim());
         }, 300);
       },
@@ -532,8 +692,8 @@ function setupEventListeners() {
   
   // Popup favorite button
   document.getElementById('btn-popup-favorite').addEventListener('click', async () => {
-    if (currentPopupWord) {
-      const added = await LaoshiDB.toggleFavorite(currentPopupWord);
+    if (AppState.currentPopupWord) {
+      const added = await LaoshiDB.toggleFavorite(AppState.currentPopupWord);
       app.toast.create({
         text: added ? 'Добавлено в избранное' : 'Удалено из избранного',
         closeTimeout: 1500
@@ -542,10 +702,17 @@ function setupEventListeners() {
     }
   });
   
-  // Tab change - update stats when settings tab is shown
+  // Tab change - update stats when settings tab is shown and cleanup state
   document.querySelectorAll('.tab-link').forEach(tab => {
     tab.addEventListener('click', async () => {
-      if (tab.getAttribute('href') === '#view-settings') {
+      const href = tab.getAttribute('href');
+      
+      // Cleanup state on tab switch
+      if (href !== '#view-dictionary') {
+        AppState.clearSearchTimeout();
+      }
+      
+      if (href === '#view-settings') {
         await updateStats();
         await loadDictionaryList();
       }
@@ -585,7 +752,7 @@ function setupEventListeners() {
       });
       app.dialog.close();
       app.toast.create({ text: `Загружено ${count.toLocaleString()} слов`, closeTimeout: 2000 }).open();
-      showDictionaryReady();
+      setDictionaryViewState('ready');
       await loadDictionaryList();
       await updateStats();
     } catch (error) {
@@ -635,3 +802,25 @@ function truncateText(text, maxLength) {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 }
+
+/**
+ * Export public API
+ * These functions can be called from external scripts or console for debugging
+ */
+window.LaoshiApp = {
+  // State management
+  AppState,
+  
+  // UI state control
+  setDictionaryViewState,
+  
+  // Core functions
+  loadDictionary,
+  performSearch,
+  loadDecks,
+  updateStats,
+  
+  // Utility functions
+  escapeHtml,
+  truncateText
+};
