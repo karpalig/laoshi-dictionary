@@ -14,36 +14,49 @@ let db = null;
 async function initDB() {
   if (db) return db;
   
-  db = await idb.openDB(DB_NAME, DB_VERSION, {
-    upgrade(database, oldVersion, newVersion, transaction) {
-      // Words store - main dictionary
-      if (!database.objectStoreNames.contains('words')) {
-        const wordsStore = database.createObjectStore('words', { keyPath: 'id', autoIncrement: true });
-        wordsStore.createIndex('word', 'w', { unique: false });
-        wordsStore.createIndex('pinyin', 'p', { unique: false });
+  try {
+    console.log('[LaoshiDB] Initializing database...');
+    db = await idb.openDB(DB_NAME, DB_VERSION, {
+      upgrade(database, oldVersion, newVersion, transaction) {
+        console.log(`[LaoshiDB] Upgrading database from version ${oldVersion} to ${newVersion}`);
+        
+        // Words store - main dictionary
+        if (!database.objectStoreNames.contains('words')) {
+          console.log('[LaoshiDB] Creating words store...');
+          const wordsStore = database.createObjectStore('words', { keyPath: 'id', autoIncrement: true });
+          wordsStore.createIndex('word', 'w', { unique: false });
+          wordsStore.createIndex('pinyin', 'p', { unique: false });
+        }
+        
+        // Decks store - word lists
+        if (!database.objectStoreNames.contains('decks')) {
+          console.log('[LaoshiDB] Creating decks store...');
+          const decksStore = database.createObjectStore('decks', { keyPath: 'id' });
+          decksStore.createIndex('type', 'type', { unique: false });
+        }
+        
+        // Deck words store - words in each deck
+        if (!database.objectStoreNames.contains('deckWords')) {
+          console.log('[LaoshiDB] Creating deckWords store...');
+          const deckWordsStore = database.createObjectStore('deckWords', { keyPath: ['deckId', 'wordId'] });
+          deckWordsStore.createIndex('deckId', 'deckId', { unique: false });
+          deckWordsStore.createIndex('wordId', 'wordId', { unique: false });
+        }
+        
+        // Settings store
+        if (!database.objectStoreNames.contains('settings')) {
+          console.log('[LaoshiDB] Creating settings store...');
+          database.createObjectStore('settings', { keyPath: 'key' });
+        }
       }
-      
-      // Decks store - word lists
-      if (!database.objectStoreNames.contains('decks')) {
-        const decksStore = database.createObjectStore('decks', { keyPath: 'id' });
-        decksStore.createIndex('type', 'type', { unique: false });
-      }
-      
-      // Deck words store - words in each deck
-      if (!database.objectStoreNames.contains('deckWords')) {
-        const deckWordsStore = database.createObjectStore('deckWords', { keyPath: ['deckId', 'wordId'] });
-        deckWordsStore.createIndex('deckId', 'deckId', { unique: false });
-        deckWordsStore.createIndex('wordId', 'wordId', { unique: false });
-      }
-      
-      // Settings store
-      if (!database.objectStoreNames.contains('settings')) {
-        database.createObjectStore('settings', { keyPath: 'key' });
-      }
-    }
-  });
-  
-  return db;
+    });
+    
+    console.log('[LaoshiDB] Database initialized successfully');
+    return db;
+  } catch (error) {
+    console.error('[LaoshiDB] Failed to initialize database:', error);
+    throw new Error(`Database initialization failed: ${error.message}`);
+  }
 }
 
 /**
@@ -89,67 +102,120 @@ async function setCurrentDictionary(dictionaryId) {
  * @param {function} progressCallback - Progress callback (processed, total)
  */
 async function loadDictionary(filePath, progressCallback) {
-  const database = await initDB();
-  
-  // If no file path provided, get from settings or use default
-  if (!filePath) {
-    const index = await getAvailableDictionaries();
-    const currentId = await getCurrentDictionary();
+  try {
+    console.log('[LaoshiDB] Loading dictionary...');
+    const database = await initDB();
     
-    if (currentId) {
-      const dict = index.dictionaries.find(d => d.id === currentId);
-      filePath = dict ? dict.file : null;
+    // If no file path provided, get from settings or use default
+    if (!filePath) {
+      const index = await getAvailableDictionaries();
+      const currentId = await getCurrentDictionary();
+      
+      if (currentId) {
+        const dict = index.dictionaries.find(d => d.id === currentId);
+        filePath = dict ? dict.file : null;
+      }
+      
+      if (!filePath && index.default) {
+        const defaultDict = index.dictionaries.find(d => d.id === index.default);
+        filePath = defaultDict ? defaultDict.file : 'dictionary/dabkrs-light.ndjson';
+      }
+      
+      filePath = filePath || 'dictionary/dabkrs-light.ndjson';
     }
     
-    if (!filePath && index.default) {
-      const defaultDict = index.dictionaries.find(d => d.id === index.default);
-      filePath = defaultDict ? defaultDict.file : 'dictionary/dabkrs-light.ndjson';
+    console.log(`[LaoshiDB] Loading from: ${filePath}`);
+    
+    // Clear existing words before loading new dictionary
+    try {
+      const clearTx = database.transaction('words', 'readwrite');
+      await clearTx.store.clear();
+      await clearTx.done;
+      console.log('[LaoshiDB] Cleared existing words');
+    } catch (error) {
+      console.error('[LaoshiDB] Failed to clear existing words:', error);
+      throw new Error('Failed to clear existing dictionary data');
     }
     
-    filePath = filePath || 'dictionary/dabkrs-light.ndjson';
-  }
-  
-  // Clear existing words before loading new dictionary
-  const clearTx = database.transaction('words', 'readwrite');
-  await clearTx.store.clear();
-  await clearTx.done;
-  
-  const response = await fetch(filePath);
-  const text = await response.text();
-  const lines = text.trim().split('\n');
-  const total = lines.length;
-  
-  // Process in batches for better performance
-  const BATCH_SIZE = 500;
-  let processed = 0;
-  
-  for (let i = 0; i < lines.length; i += BATCH_SIZE) {
-    const batch = lines.slice(i, i + BATCH_SIZE);
-    const tx = database.transaction('words', 'readwrite');
+    // Fetch dictionary file
+    let response;
+    try {
+      response = await fetch(filePath);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('[LaoshiDB] Failed to fetch dictionary:', error);
+      throw new Error(`Failed to download dictionary file: ${error.message}`);
+    }
     
-    for (const line of batch) {
-      if (line.trim()) {
-        try {
-          const word = JSON.parse(line);
-          await tx.store.put(word);
-        } catch (e) {
-          console.warn('Failed to parse line:', line);
+    // Parse NDJSON
+    let text, lines;
+    try {
+      text = await response.text();
+      lines = text.trim().split('\n');
+      console.log(`[LaoshiDB] Parsing ${lines.length} entries...`);
+    } catch (error) {
+      console.error('[LaoshiDB] Failed to parse dictionary text:', error);
+      throw new Error('Failed to parse dictionary file');
+    }
+    
+    const total = lines.length;
+    
+    // Process in batches for better performance
+    const BATCH_SIZE = 500;
+    let processed = 0;
+    let parseErrors = 0;
+    
+    try {
+      for (let i = 0; i < lines.length; i += BATCH_SIZE) {
+        const batch = lines.slice(i, i + BATCH_SIZE);
+        const tx = database.transaction('words', 'readwrite');
+        
+        for (const line of batch) {
+          if (line.trim()) {
+            try {
+              const word = JSON.parse(line);
+              await tx.store.put(word);
+            } catch (e) {
+              parseErrors++;
+              if (parseErrors <= 10) {
+                console.warn('[LaoshiDB] Failed to parse line:', line.substring(0, 100), e.message);
+              }
+            }
+          }
+        }
+        
+        await tx.done;
+        processed += batch.length;
+        
+        if (progressCallback) {
+          progressCallback(processed, total);
         }
       }
+      
+      if (parseErrors > 0) {
+        console.warn(`[LaoshiDB] Completed with ${parseErrors} parse errors`);
+      }
+    } catch (error) {
+      console.error('[LaoshiDB] Failed during batch processing:', error);
+      throw new Error(`Failed to save dictionary data: ${error.message}`);
     }
     
-    await tx.done;
-    processed += batch.length;
-    
-    if (progressCallback) {
-      progressCallback(processed, total);
+    // Create default system decks
+    try {
+      await createSystemDecks();
+    } catch (error) {
+      console.error('[LaoshiDB] Failed to create system decks:', error);
+      // Non-critical, continue
     }
+    
+    console.log(`[LaoshiDB] Successfully loaded ${processed} entries`);
+    return processed;
+  } catch (error) {
+    console.error('[LaoshiDB] loadDictionary failed:', error);
+    throw error;
   }
-  
-  // Create default system decks
-  await createSystemDecks();
-  
-  return processed;
 }
 
 /**
@@ -179,9 +245,11 @@ async function createSystemDecks() {
 async function searchWords(query, limit = 50) {
   if (!query || query.length < 1) return [];
   
-  const database = await initDB();
-  const queryLower = query.toLowerCase();
-  const seen = new Set();
+  try {
+    console.log(`[LaoshiDB] Searching for: "${query}"`);
+    const database = await initDB();
+    const queryLower = query.toLowerCase();
+    const seen = new Set();
   
   // Collect results with match type for sorting
   const chineseMatches = [];    // Priority 1: Chinese character match
@@ -295,13 +363,21 @@ async function searchWords(query, limit = 50) {
   definitionMatches.sort(sortDefinitionsByRelevance);
   
   // Combine results in priority order
-  return [
+  const results = [
     ...chineseMatches,
     ...pinyinExact,
     ...pinyinStartsWith,
     ...pinyinIncludes,
     ...definitionMatches
   ].slice(0, limit);
+  
+  console.log(`[LaoshiDB] Found ${results.length} results`);
+  return results;
+  } catch (error) {
+    console.error('[LaoshiDB] Search failed:', error);
+    // Return empty array on error to prevent UI breakage
+    return [];
+  }
 }
 
 /**
@@ -500,6 +576,28 @@ async function setSetting(key, value) {
 }
 
 /**
+ * Clear all dictionary data
+ */
+async function clearDictionary() {
+  try {
+    console.log('[LaoshiDB] Clearing dictionary...');
+    const database = await initDB();
+    
+    // Clear all stores
+    const tx = database.transaction(['words', 'decks', 'deckWords'], 'readwrite');
+    await tx.objectStore('words').clear();
+    await tx.objectStore('decks').clear();
+    await tx.objectStore('deckWords').clear();
+    await tx.done;
+    
+    console.log('[LaoshiDB] Dictionary cleared successfully');
+  } catch (error) {
+    console.error('[LaoshiDB] Failed to clear dictionary:', error);
+    throw new Error(`Failed to clear dictionary: ${error.message}`);
+  }
+}
+
+/**
  * Get database statistics
  */
 async function getStats() {
@@ -530,6 +628,7 @@ window.LaoshiDB = {
   initDB,
   isDictionaryLoaded,
   loadDictionary,
+  clearDictionary,
   getAvailableDictionaries,
   getCurrentDictionary,
   setCurrentDictionary,
