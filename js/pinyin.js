@@ -1,85 +1,112 @@
-/**
- * Pinyin Module - Numbered to Tonal Conversion
- * Converts pinyin like "ni3 hao3" → "nǐ hǎo"
- */
+// Pinyin Helper Utilities
+const PinyinHelper = {
+    // Tone marks mapping
+    toneMarks: {
+        'a': ['ā', 'á', 'ǎ', 'à', 'a'],
+        'e': ['ē', 'é', 'ě', 'è', 'e'],
+        'i': ['ī', 'í', 'ǐ', 'ì', 'i'],
+        'o': ['ō', 'ó', 'ǒ', 'ò', 'o'],
+        'u': ['ū', 'ú', 'ǔ', 'ù', 'u'],
+        'ü': ['ǖ', 'ǘ', 'ǚ', 'ǜ', 'ü']
+    },
 
-const LaoshiPinyin = (() => {
-  // Tone marks for each vowel [neutral, 1st, 2nd, 3rd, 4th]
-  const TONES = {
-    a: ['a', 'ā', 'á', 'ǎ', 'à'],
-    e: ['e', 'ē', 'é', 'ě', 'è'],
-    i: ['i', 'ī', 'í', 'ǐ', 'ì'],
-    o: ['o', 'ō', 'ó', 'ǒ', 'ò'],
-    u: ['u', 'ū', 'ú', 'ǔ', 'ù'],
-    ü: ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ'],
-    v: ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ']  // v as alias for ü
-  };
+    // Converts numbered pinyin (ni3 hao3) to tone marks (nǐ hǎo)
+    numberedToToneMarks(pinyin) {
+        let result = pinyin;
+        const regex = /([a-züA-ZÜ]+)([1-4])/g;
+        const matches = [];
+        let match;
+        
+        while ((match = regex.exec(result)) !== null) {
+            matches.push({
+                full: match[0],
+                syllable: match[1],
+                tone: parseInt(match[2]),
+                index: match.index
+            });
+        }
+        
+        // Process matches in reverse to maintain string indices
+        for (let i = matches.length - 1; i >= 0; i--) {
+            const m = matches[i];
+            const markedSyllable = this.addToneMark(m.syllable, m.tone);
+            result = result.slice(0, m.index) + markedSyllable + result.slice(m.index + m.full.length);
+        }
+        
+        return result;
+    },
 
-  /**
-   * Find vowel index to receive tone mark
-   * Rules: a/e always get tone; ou → o gets tone; else last vowel
-   */
-  const findToneIndex = (syllable) => {
-    const s = syllable.toLowerCase();
-    
-    // a or e always takes the tone
-    const aIdx = s.indexOf('a');
-    if (aIdx !== -1) return aIdx;
-    
-    const eIdx = s.indexOf('e');
-    if (eIdx !== -1) return eIdx;
-    
-    // ou → o takes the tone
-    const ouIdx = s.indexOf('ou');
-    if (ouIdx !== -1) return ouIdx;
-    
-    // Otherwise last vowel
-    for (let i = s.length - 1; i >= 0; i--) {
-      if ('iouüv'.includes(s[i])) return i;
+    // Adds tone mark to a pinyin syllable
+    addToneMark(syllable, tone) {
+        if (tone < 1 || tone > 4) return syllable;
+        
+        let result = syllable.toLowerCase();
+        const toneIndex = tone - 1;
+        
+        // Rules for tone mark placement:
+        // 1. If there's an 'a' or 'e', it takes the tone mark
+        // 2. If there's an 'ou', 'o' takes the tone mark
+        // 3. Otherwise, the last vowel takes the tone mark
+        
+        if (result.includes('a')) {
+            const index = result.indexOf('a');
+            result = result.slice(0, index) + this.toneMarks['a'][toneIndex] + result.slice(index + 1);
+        } else if (result.includes('e')) {
+            const index = result.indexOf('e');
+            result = result.slice(0, index) + this.toneMarks['e'][toneIndex] + result.slice(index + 1);
+        } else if (result.includes('ou')) {
+            const index = result.indexOf('o');
+            result = result.slice(0, index) + this.toneMarks['o'][toneIndex] + result.slice(index + 1);
+        } else {
+            // Find last vowel
+            const vowels = ['i', 'o', 'u', 'ü'];
+            for (const vowel of vowels.reverse()) {
+                const index = result.lastIndexOf(vowel);
+                if (index !== -1) {
+                    result = result.slice(0, index) + this.toneMarks[vowel][toneIndex] + result.slice(index + 1);
+                    break;
+                }
+            }
+        }
+        
+        return result;
+    },
+
+    // Normalizes text for search (removes tones, converts to lowercase)
+    normalizeForSearch(text) {
+        let normalized = text.toLowerCase();
+        
+        // Remove tone marks
+        for (const [base, variants] of Object.entries(this.toneMarks)) {
+            for (const variant of variants) {
+                normalized = normalized.replace(new RegExp(variant, 'g'), base);
+            }
+        }
+        
+        return normalized.trim();
+    },
+
+    // Checks if string contains Chinese characters
+    containsChinese(text) {
+        return /[\u4e00-\u9fff]/.test(text);
+    },
+
+    // Counts Chinese characters in string
+    chineseCharacterCount(text) {
+        const matches = text.match(/[\u4e00-\u9fff]/g);
+        return matches ? matches.length : 0;
+    },
+
+    // Returns color for HSK level
+    colorForHSKLevel(level) {
+        const colors = {
+            1: '#22c55e', // green
+            2: '#00CCFF', // cyan
+            3: '#3b82f6', // blue
+            4: '#8b5cf6', // purple
+            5: '#f97316', // orange
+            6: '#ec4899'  // pink
+        };
+        return colors[level] || '#6b7280'; // gray
     }
-    
-    return -1;
-  };
-
-  /**
-   * Convert single syllable with tone number to tonal pinyin
-   * e.g., "ni3" → "nǐ", "lü4" → "lǜ"
-   */
-  const convertSyllable = (syllable) => {
-    const match = syllable.match(/^([a-züv]+)([1-5])?$/i);
-    if (!match) return syllable;
-    
-    let [, base, toneNum] = match;
-    const tone = parseInt(toneNum) || 0;
-    
-    if (tone === 0 || tone === 5) return base;
-    
-    const idx = findToneIndex(base);
-    if (idx === -1) return base;
-    
-    const vowel = base[idx].toLowerCase();
-    const toneMap = TONES[vowel];
-    
-    if (!toneMap) return base;
-    
-    const toned = toneMap[tone];
-    return base.slice(0, idx) + toned + base.slice(idx + 1);
-  };
-
-  /**
-   * Convert full pinyin string
-   * e.g., "ni3 hao3" → "nǐ hǎo", "ni3hao3" → "nǐhǎo"
-   */
-  const convert = (input) => {
-    if (!input) return '';
-    return input.replace(/[a-züv]+[1-5]?/gi, convertSyllable);
-  };
-
-  return { convert, convertSyllable };
-})();
-
-// Export for module usage
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = LaoshiPinyin;
-}
-
+};

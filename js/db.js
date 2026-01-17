@@ -60,7 +60,8 @@ async function isDictionaryLoaded() {
  */
 async function getAvailableDictionaries() {
   try {
-    const response = await fetch('dictionary/index.json');
+    // Use absolute path to avoid issues with URL routing
+    const response = await fetch('/dictionary/index.json');
     const data = await response.json();
     return data;
   } catch (e) {
@@ -114,7 +115,9 @@ async function loadDictionary(filePath, progressCallback) {
   await clearTx.store.clear();
   await clearTx.done;
   
-  const response = await fetch(filePath);
+  // Ensure absolute path
+  const absolutePath = filePath.startsWith('/') ? filePath : '/' + filePath;
+  const response = await fetch(absolutePath);
   const text = await response.text();
   const lines = text.trim().split('\n');
   const total = lines.length;
@@ -379,7 +382,9 @@ async function loadHSKDeck(deckId) {
   
   // Load from file
   try {
-    const response = await fetch(deck.file);
+    // Ensure absolute path
+    const absolutePath = deck.file.startsWith('/') ? deck.file : '/' + deck.file;
+    const response = await fetch(absolutePath);
     const data = await response.json();
     
     const words = data.words || data;

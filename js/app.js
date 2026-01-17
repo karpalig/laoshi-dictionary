@@ -3,7 +3,10 @@
  * Framework7 initialization and UI logic
  */
 
-// Initialize Framework7 App
+console.log('app.js loaded, initializing Framework7...');
+console.log('Framework7 loaded:', typeof Framework7);
+
+// Initialize Framework7 App with proper router configuration
 const app = new Framework7({
   el: '#app',
   name: '老师词典',
@@ -15,9 +18,23 @@ const app = new Framework7({
   touch: {
     tapHold: true
   },
+  // Router configuration for URL changes
+  view: {
+    browserHistory: true,
+    browserHistorySeparator: '',
+    browserHistoryRoot: window.location.origin + window.location.pathname,
+    browserHistoryInitialMatch: true,
+  },
+  // Routes for routable tabs
+  routes: [
+    { path: '/', id: 'dictionary' },
+    { path: '/decks/', id: 'decks' },
+    { path: '/settings/', id: 'settings' },
+  ],
   on: {
-    init: async function() {
-      await initializeApp();
+    init: function() {
+      // Defer initializeApp to next tick to allow 'app' const to be assigned
+      setTimeout(() => initializeApp(), 0);
     }
   }
 });
@@ -31,7 +48,10 @@ let currentDeckId = null;
  * Initialize application
  */
 async function initializeApp() {
+  console.log('initializeApp called, app object:', typeof app, app ? 'exists' : 'null');
+
   // Initialize database
+  console.log('Initializing DB...');
   await LaoshiDB.initDB();
   
   // Load saved dark mode setting
@@ -542,14 +562,39 @@ function setupEventListeners() {
     }
   });
   
-  // Tab change - update stats when settings tab is shown
+  // Tab URL mapping
+  const tabUrls = {
+    '#view-dictionary': '/',
+    '#view-decks': '/decks/',
+    '#view-settings': '/settings/'
+  };
+  
+  // Tab change - update URL and stats
   document.querySelectorAll('.tab-link').forEach(tab => {
     tab.addEventListener('click', async () => {
-      if (tab.getAttribute('href') === '#view-settings') {
+      const tabHref = tab.getAttribute('href');
+      const newUrl = tabUrls[tabHref];
+      
+      // Update browser URL without reload
+      if (newUrl && window.location.pathname !== newUrl) {
+        history.pushState({tab: tabHref}, '', newUrl);
+      }
+      
+      if (tabHref === '#view-settings') {
         await updateStats();
         await loadDictionaryList();
       }
     });
+  });
+  
+  // Handle browser back/forward
+  window.addEventListener('popstate', (event) => {
+    const path = window.location.pathname;
+    let tabId = '#view-dictionary';
+    if (path.includes('/decks')) tabId = '#view-decks';
+    else if (path.includes('/settings')) tabId = '#view-settings';
+    
+    app.tab.show(tabId);
   });
   
   // Open dictionary selection sheet

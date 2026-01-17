@@ -4,13 +4,15 @@
       "id": "dabkrs-light",
       "name": "БКРС 万",
       "file": "dictionary/dabkrs-light.ndjson",
-      "description": "Большой китайско-русский словарь 10 тысяч записей "
+      "description": "Большой китайско-русский словарь 10 тысяч записей",
+      "date": "2026-01-01"
     },
     {
       "id": "dabkrs-light-notags",
       "name": "БКРС Light (без тегов)",
       "file": "dictionary/dabkrs-light-notags.ndjson",
-      "description": "БКРС тестовая сборка без форматирующих тегов"
+      "description": "БКРС тестовая сборка без форматирующих тегов",
+      "date": "2026-01-07"
     }
   ],
   "default": "dabkrs-light"
